@@ -1,0 +1,88 @@
+@import "tailwindcss";
+
+/* Hide Alpine x-show/x-cloak elements (e.g. modals) until Alpine initialises,
+   so they don't flash on page load. */
+[x-cloak] { display: none !important; }
+
+/* Tailwind v4's Preflight follows the native default (arrow cursor) on buttons.
+   Restore the click affordance the web trains users to expect, while keeping a
+   disabled button honest (no hand on something you can't press). */
+@layer base {
+    button:not(:disabled),
+    [role="button"]:not(:disabled) {
+        cursor: pointer;
+    }
+
+    button:disabled {
+        cursor: not-allowed;
+    }
+}
+
+@theme {
+    --font-sans: 'Nunito', ui-sans-serif, system-ui, sans-serif;
+
+    /* Quiet, near-white canvas (same cool grey family as the sidebar) so white
+       cards and the header still read, without a loud tint on the main area. */
+    --color-canvas: #fafbfc;
+    --color-ink: #0c0822;
+
+    /* KUBO brand "dark slate blue" (#3d5494, from afrodidact.org/kubo), mapped
+       onto the indigo scale so every existing indigo accent — logo, links,
+       buttons, active nav — picks up the real brand colour. */
+    --color-indigo-50: #f0f3fa;
+    --color-indigo-100: #dee4f2;
+    --color-indigo-200: #c1cbe4;
+    --color-indigo-300: #96a5cd;
+    --color-indigo-400: #6e82b6;
+    --color-indigo-500: #4a619c;
+    --color-indigo-600: #3d5494;
+    --color-indigo-700: #34486f;
+    --color-indigo-800: #2a3658;
+    --color-indigo-900: #25304c;
+    --color-indigo-950: #161d31;
+
+    /* Supporting Afrodidact/KUBO brand colours (afrodidact.org). Use for
+       semantic states so success/highlight/error stay on-brand. */
+    --color-brand-gold:  #f8c638;  /* highlight (fills/dots only — too light for text) */
+
+    /* Success = Afrodidact green (#47b174), mapped onto the green scale so every
+       green accent (mastery cells, success messages, status dots) is on-brand. */
+    --color-green-50:  #f0f9f4;
+    --color-green-100: #ddf0e5;
+    --color-green-200: #bce2cd;
+    --color-green-300: #8fceac;
+    --color-green-400: #66bd8d;
+    --color-green-500: #47b174;
+    --color-green-600: #3a9c63;
+    --color-green-700: #2f7f51;
+    --color-green-800: #296643;
+    --color-green-900: #235439;
+    --color-green-950: #102e1f;
+
+    /* Error / emphasis = Afrodidact red (#dd4143), mapped onto the red scale. */
+    --color-red-50:  #fdf2f2;
+    --color-red-100: #fbe0e0;
+    --color-red-200: #f6c5c5;
+    --color-red-300: #ef9d9d;
+    --color-red-400: #e66f70;
+    --color-red-500: #dd4143;
+    --color-red-600: #c8302f;
+    --color-red-700: #a82627;
+    --color-red-800: #8b2222;
+    --color-red-900: #732121;
+    --color-red-950: #3e0d0d;
+
+    /* Health = a warm pink in the same family as the brand red (#dd4143),
+       so the Health section reads pink without clashing with the palette. */
+    --color-pink-50:  #fdf2f5;
+    --color-pink-100: #fce7ed;
+    --color-pink-200: #f9cfdc;
+    --color-pink-300: #f2a7c0;
+    --color-pink-400: #ea789f;
+    --color-pink-500: #e15d83;
+    --color-pink-600: #cf3f68;
+    --color-pink-700: #ad2d53;
+    --color-pink-800: #902746;
+    --color-pink-900: #79243e;
+    --color-pink-950: #43101f;
+}

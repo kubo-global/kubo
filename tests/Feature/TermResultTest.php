@@ -1,0 +1,147 @@
+<?php
+
+namespace Tests\Feature;
+
+use App\Models\Assessment;
+use App\Models\AssessmentScore;
+use App\Models\AssessmentType;
+use App\Models\Enrollment;
+use App\Models\Offering;
+use App\Models\School;
+use App\Models\Subject;
+use App\Models\Term;
+use App\Models\User;
+use Database\Seeders\AlbredaSeeder;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use PHPUnit\Framework\Attributes\Test;
+use Tests\TestCase;
+
+/**
+ * The "by month" term-marks grid and the result sheet / analysis / histogram it
+ * produces, exercised against the seeded Albreda Grade 6A.
+ */
+class TermResultTest extends TestCase
+{
+    use RefreshDatabase;
+
+    private Offering $offering;
+    private User $head;
+    private Term $term2;
+    private School $school;
+
+    public function setUp(): void
+    {
+        parent::setUp();
+        $this->seed(AlbredaSeeder::class);
+        $this->school = School::where('name', 'Albreda Lower Basic School')->firstOrFail();
+        $this->offering = Offering::where('name', 'A')->whereHas('grade', fn ($q) => $q->where('name', 'Grade 6'))->firstOrFail();
+        $this->head = User::where('first_name', 'Mr')->where('last_name', 'Badjie')->firstOrFail();
+        $this->term2 = Term::where('name', 'Term 2')->firstOrFail();
+    }
+
+    private function params(array $extra = []): array
+    {
+        return array_merge(['offering' => $this->offering, 'term' => $this->term2->id, 'month' => '2026-04', 'type' => 'Exam'], $extra);
+    }
+
+    private function testType(string $name): AssessmentType
+    {
+        return AssessmentType::where('school_id', $this->school->id)->where('name', $name)->firstOrFail();
+    }
+
+    #[Test]
+    public function the_month_grid_is_edit_only_and_lands_on_the_results_view(): void
+    {
+        // Opening the grid without ?edit sends you to the results view.
+        $resp = $this->actingAs($this->head)->get(route('term-grid.edit', $this->params()));
+        $resp->assertRedirect();
+        $this->assertStringContainsString('term-report', $resp->headers->get('Location'));
+
+        // Edit mode shows the score inputs.
+        $this->actingAs($this->head)->get(route('term-grid.edit', $this->params(['edit' => 1])))
+            ->assertOk()
+            ->assertSee('name="scores', false)
+            ->assertSee('Save marks');
+    }
+
+    #[Test]
+    public function saving_a_months_marks_stores_them_and_flags_absentees(): void
+    {
+        $english = Subject::where('name', 'English language')->firstOrFail();
+        $ids = Enrollment::where('offering_id', $this->offering->id)->pluck('user_id');
+        [$present, $absent] = [$ids[0], $ids[1]];
+
+        $this->actingAs($this->head)->post(route('term-grid.save', $this->offering), [
+            'term' => $this->term2->id, 'month' => '2026-02', 'type' => 'Test',
+            'scores' => [$english->id => [$present => 72]],
+            'absent' => [$english->id => [$absent => 1]],
+        ])->assertRedirect();
+
+        // A February Test assessment for English was created (topic-free).
+        $exam = Assessment::where('subject_id', $english->id)
+            ->where('term_id', $this->term2->id)
+            ->where('assessment_type_id', $this->testType('Test')->id)
+            ->whereMonth('date', 2)->first();
+        $this->assertNotNull($exam);
+
+        $this->assertEquals(72, AssessmentScore::where('assessment_id', $exam->id)->where('user_id', $present)->value('score'));
+        $this->assertSame(1, (int) AssessmentScore::where('assessment_id', $exam->id)->where('user_id', $absent)->value('absent'));
+    }
+
+    #[Test]
+    public function a_pupil_absent_earlier_can_be_marked_later(): void
+    {
+        $english = Subject::where('name', 'English language')->firstOrFail();
+        $pupil = Enrollment::where('offering_id', $this->offering->id)->value('user_id');
+        $base = ['term' => $this->term2->id, 'month' => '2026-03', 'type' => 'Test'];
+
+        // Marked absent when the test is first entered.
+        $this->actingAs($this->head)->post(route('term-grid.save', $this->offering), $base + ['absent' => [$english->id => [$pupil => 1]]]);
+        // Sits it later; the teacher fills the mark in.
+        $this->actingAs($this->head)->post(route('term-grid.save', $this->offering), $base + ['scores' => [$english->id => [$pupil => 64]]]);
+
+        $exam = Assessment::where('subject_id', $english->id)
+            ->where('term_id', $this->term2->id)
+            ->where('assessment_type_id', $this->testType('Test')->id)
+            ->whereMonth('date', 3)->first();
+        $score = AssessmentScore::where('assessment_id', $exam->id)->where('user_id', $pupil)->first();
+
+        $this->assertEquals(64, $score->score);
+        $this->assertSame(0, (int) $score->absent);   // no longer absent
+    }
+
+    #[Test]
+    public function clearing_a_period_removes_its_marks(): void
+    {
+        $countApril = fn () => Assessment::where('offering_id', $this->offering->id)
+            ->where('term_id', $this->term2->id)->whereMonth('date', 4)->count();
+        $this->assertGreaterThan(0, $countApril());
+
+        $this->actingAs($this->head)->post(route('term-grid.clear', $this->offering), [
+            'term' => $this->term2->id, 'month' => '2026-04',
+        ])->assertRedirect();
+
+        $this->assertSame(0, $countApril());
+    }
+
+    #[Test]
+    public function the_report_page_shows_the_three_sections_on_screen(): void
+    {
+        $this->actingAs($this->head)->get(route('term-grid.report', $this->params()))
+            ->assertOk()
+            ->assertSee('Result sheet')
+            ->assertSee('Analysis')
+            ->assertSee('Histogram')
+            ->assertSee('Kumba'); // top pupil, in the result sheet tab
+    }
+
+    #[Test]
+    public function the_result_bundle_and_each_part_generate_as_pdf(): void
+    {
+        foreach (['term-grid.bundle', 'term-grid.result-sheet', 'term-grid.analysis', 'term-grid.histogram'] as $route) {
+            $response = $this->actingAs($this->head)->get(route($route, $this->params()));
+            $response->assertOk();
+            $this->assertStringStartsWith('%PDF', $response->getContent());
+        }
+    }
+}

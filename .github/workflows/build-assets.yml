@@ -1,0 +1,55 @@
+name: Build front-end assets
+
+# Build the Vite assets in CI and commit them to public/build, so the servers
+# ship prebuilt assets and never need Node (deploy.sh only pulls + composer +
+# migrate). Runs on main whenever a front-end source changes; public/build is
+# intentionally NOT in the path filter, so this job's own asset commit does not
+# retrigger it.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'resources/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'vite.config.*'
+      - 'tailwind.config.*'
+      - 'postcss.config.*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: build-assets-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+      - run: npm run build
+
+      - name: Commit built assets if they changed
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public/build
+          if git diff --cached --quiet; then
+            echo "Assets already up to date, nothing to commit."
+          else
+            git commit -m "Build front-end assets [skip ci]"
+            git push
+          fi

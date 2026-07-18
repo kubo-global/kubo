@@ -1,0 +1,18 @@
+<?php
+
+namespace Database\Factories;
+
+use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Support\Str;
+
+class StudentFactory extends Factory {
+    public function definition()
+    {
+        return [
+            'first_name' => $this->faker->firstName,
+            'last_name' => $this->faker->lastName,
+            'password' => bcrypt('secret'),
+            'remember_token' => Str::random(10),
+        ];
+    }
+}

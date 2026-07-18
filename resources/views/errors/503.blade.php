@@ -1,0 +1,5 @@
+@extends('errors.layout')
+@section('title', 'Down for maintenance')
+@section('code', '503')
+@section('message', 'KUBO is being updated and will be back shortly. Thanks for your patience.')
+@section('hideCta')
