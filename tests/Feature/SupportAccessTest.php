@@ -68,4 +68,21 @@ class SupportAccessTest extends TestCase
 
         $this->get(route('login'))->assertOk()->assertDontSee('KUBO Support');
     }
+
+    #[Test]
+    public function real_staff_holding_system_admin_still_show_on_the_login_list(): void
+    {
+        // A real headmaster can hold system_admin (backups etc.); only the KUBO
+        // Support identity is hidden, not everyone with the role. Regression: a
+        // Swallow headmaster vanished from the picker and could not sign in.
+        $head = \App\Models\User::create([
+            'first_name' => 'Suwaibatou',
+            'last_name' => 'Bah',
+            'password' => bcrypt('secret'),
+            'archived' => false,
+        ]);
+        $head->syncRoles(['headmaster', 'system_admin']);
+
+        $this->get(route('login'))->assertOk()->assertSee('Suwaibatou');
+    }
 }

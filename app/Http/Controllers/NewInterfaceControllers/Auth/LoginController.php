@@ -83,9 +83,11 @@ class LoginController extends Controller
 
         $users = User::role($acceptedRoles)
             ->where('archived', '!=', 1)
-            // The KUBO Support (system_admin) account never shows on a school's login
-            // list; it is only reachable via a signed link from `php artisan kubo:support`.
-            ->whereDoesntHave('roles', fn ($r) => $r->where('name', 'system_admin'))
+            // The KUBO Support account never shows on a school's login list; it is
+            // only reachable via a signed link from `php artisan kubo:support`. Matched
+            // by the identity that command creates — NOT by the system_admin role,
+            // which real staff can hold too (e.g. a headmaster who manages backups).
+            ->whereNot(fn ($q) => $q->where('first_name', 'KUBO')->where('last_name', 'Support'))
             // Non-teaching staff (admin, caregiver, headmaster, coordinator,
             // assistant_coordinator) are always shown; teachers only when
             // they have an offering in the current school year — covers both
