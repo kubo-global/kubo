@@ -577,10 +577,39 @@
       <p class="mb-3 text-xs text-gray-500">Choose how reports are produced for this school.</p>
       <form method="POST" action="{{ route('settings.update-report-type') }}" class="flex items-center gap-2">
         @csrf
-        <select name="report_type" onchange="this.form.submit()"
+        <select name="report_type" onchange="this.form.submit()" aria-label="Report type"
           class="px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-gray-900 focus:border-gray-900">
           <option value="term" @selected(($reportType ?? 'term') === 'term')>Term report — one page per term</option>
           <option value="book" @selected(($reportType ?? 'term') === 'book')>Report Book — annual grid (empty or filled)</option>
+        </select>
+        <noscript><button type="submit" class="px-3 py-2 text-sm text-white bg-gray-800 rounded-md">Save</button></noscript>
+      </form>
+    </section>
+
+    <section class="mb-10">
+      <h2 class="text-sm font-semibold uppercase tracking-wider text-gray-500 mb-1">Term card layout</h2>
+      <p class="mb-3 text-xs text-gray-500">The one-page term card's printed format. School-specific layouts auto-fill position, average, class size and grade remarks.</p>
+      <form method="POST" action="{{ route('settings.update-term-card-layout') }}" class="flex items-center gap-2">
+        @csrf
+        <select name="term_card_layout" onchange="this.form.submit()" aria-label="Term card layout"
+          class="px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-gray-900 focus:border-gray-900">
+          <option value="default" @selected(($termCardLayout ?? 'default') === 'default')>Default</option>
+          <option value="albreda" @selected(($termCardLayout ?? 'default') === 'albreda')>Albreda (WAEC card)</option>
+          <option value="swallow" @selected(($termCardLayout ?? 'default') === 'swallow')>The Swallow (auto-filled report form)</option>
+        </select>
+        <noscript><button type="submit" class="px-3 py-2 text-sm text-white bg-gray-800 rounded-md">Save</button></noscript>
+      </form>
+    </section>
+
+    <section class="mb-10">
+      <h2 class="text-sm font-semibold uppercase tracking-wider text-gray-500 mb-1">Score entry periods</h2>
+      <p class="mb-3 text-xs text-gray-500">How a term is split in the scorebook: loose calendar months (each marked Test or Exam by the teacher), or a fixed Test 1 / Test 2 / Exam rhythm.</p>
+      <form method="POST" action="{{ route('settings.update-period-mode') }}" class="flex items-center gap-2">
+        @csrf
+        <select name="period_mode" onchange="this.form.submit()" aria-label="Score entry periods"
+          class="px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-gray-900 focus:border-gray-900">
+          <option value="months" @selected(($periodMode ?? 'months') === 'months')>Calendar months</option>
+          <option value="tests" @selected(($periodMode ?? 'months') === 'tests')>Test 1 / Test 2 / Exam</option>
         </select>
         <noscript><button type="submit" class="px-3 py-2 text-sm text-white bg-gray-800 rounded-md">Save</button></noscript>
       </form>
