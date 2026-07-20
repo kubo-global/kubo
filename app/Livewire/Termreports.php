@@ -18,8 +18,18 @@ class Termreports extends Component
     {
         $schoolyear = Schoolyear::orderBy('id', 'desc')->first();
         $this->selectedSchoolyear = $schoolyear->id;
-        $this->selectedTerm = $schoolyear->terms()->first()->id ?? 0;
-        
+
+        // Default to the term staff are actually working in: the one containing
+        // today, else the latest term that has started (between/after terms),
+        // else the year's first. Hard-defaulting to Term 1 made every report
+        // visit start two clicks away from the current term.
+        $terms = $schoolyear->terms()->orderBy('start')->get();
+        $now = now();
+        $current = $terms->first(fn ($t) => $t->start <= $now && $t->end >= $now)
+            ?? $terms->reverse()->first(fn ($t) => $t->start <= $now)
+            ?? $terms->first();
+        $this->selectedTerm = $current->id ?? 0;
+
         $offering = Offering::inSchoolyear($this->selectedSchoolyear)->first();
         $this->selectedGrade = $offering?->grade->id ?? 0;
     }
