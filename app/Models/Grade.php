@@ -36,6 +36,24 @@ class Grade extends Model
         'purple' => ['#efe7f7', '#5a3a82', '#8a5cc0'],
     ];
 
+    /**
+     * A sortable key that orders grades the way a school reads them: nursery /
+     * early-childhood stages first, then the numbered grades, each stage by its
+     * number. Sorting on the number alone interleaves stages (Nursery 1, Grade 1,
+     * Nursery 2, …), which is how the class list used to come out.
+     */
+    public static function sortKey(?string $name): string
+    {
+        $name = trim((string) $name);
+        $stage = match (true) {
+            (bool) preg_match('/^(nursery|ecd|early|kinder|pre)/i', $name) => 0,
+            (bool) preg_match('/^grade/i', $name) => 1,
+            default => 2,
+        };
+
+        return sprintf('%d-%03d-%s', $stage, (int) preg_replace('/\D/', '', $name), strtolower($name));
+    }
+
     /** Resolved [bg, text, swatch] hex — the chosen colour, else a stable default by id. */
     public function colorTriplet(): array
     {
