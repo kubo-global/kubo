@@ -77,6 +77,31 @@ class SwallowReportCardTest extends TestCase
     }
 
     #[Test]
+    public function subjects_follow_the_schools_preprinted_form_order(): void
+    {
+        ['school' => $school, 'offering' => $offering, 'top' => $top] = $this->scoredClass();
+
+        // Attach extra subjects out of form order; the card must reorder them.
+        foreach (['Religious Knowledge', 'English language'] as $name) {
+            $s = Subject::factory()->create(['name' => $name, 'counts_toward_total' => false]);
+            $offering->subjects($this->term->id)->save($s, ['term_id' => $this->term->id]);
+        }
+
+        $enrollment = Enrollment::where('offering_id', $offering->id)->where('user_id', $top->id)->firstOrFail();
+        $reports = (new ReportGeneratorService())->generateStudentReportPdf(
+            new NewTermReportRepository($enrollment, $this->term, $school),
+        );
+        $html = view('print.termReport-swallow', ['reports' => $reports, 'positions' => collect(), 'classSize' => 1])->render();
+
+        // Form order: Religious Knowledge before English language before Mathematics.
+        $this->assertTrue(
+            strpos($html, 'Religious Knowledge') < strpos($html, 'English language')
+            && strpos($html, 'English language') < strpos($html, 'Mathematics'),
+            'Subjects are not in the pre-printed form order',
+        );
+    }
+
+    #[Test]
     public function the_card_auto_fills_position_average_class_size_and_grade_remark(): void
     {
         ['school' => $school, 'offering' => $offering, 'top' => $top] = $this->scoredClass();
