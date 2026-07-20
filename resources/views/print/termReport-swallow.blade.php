@@ -79,6 +79,20 @@
     // Only the weighted types make up the card (Assessments + Exams); NAT (weight 0)
     // is a separate exercise and would otherwise add a stray "Marks 0" column.
     $assessmentTypes = $school ? $school->assessmentTypes->where('weight', '>', 0)->sortBy('weight')->values() : collect();
+
+    // The school's pre-printed form lists subjects in a fixed order; the card
+    // follows it so staff can lay them side by side. Subjects not on that form
+    // (e.g. the lower grades' Integrated studies/Phonics/Reading) follow after,
+    // alphabetically.
+    $subjectOrder = [
+        'Religious Knowledge', 'Verbal aptitude', 'Science', 'French', 'S.E.S.',
+        'Physical Education', 'Spelling/Dictation', 'English language', 'Mathematics',
+        'Art and craft', 'Health', 'Quantitative', 'Information Technology',
+    ];
+    $subjectRank = function ($name) use ($subjectOrder) {
+        $i = array_search($name, $subjectOrder, true);
+        return sprintf('%03d-%s', $i === false ? count($subjectOrder) + 1 : $i, $name);
+    };
 @endphp
 @foreach ($reports as $report)
     @php
@@ -140,7 +154,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach ($report['results']['subjectResults'] as $subject => $result)
+                    @foreach (collect($report['results']['subjectResults'])->sortBy(fn ($r, $name) => $subjectRank($name)) as $subject => $result)
                         @php
                             $total = $result['subjectTotal'];
                             $band = ($total !== null) ? \App\Models\GradingScale::resolve($school, (float) $total, $gradeNum) : null;
