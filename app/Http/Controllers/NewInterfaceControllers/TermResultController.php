@@ -152,6 +152,15 @@ class TermResultController extends Controller
             $column = $request->input("scores.{$subject->id}", []);
             $absentColumn = $absentFlags[$subject->id] ?? [];
 
+            // An untouched column (another teacher's subject, left blank) must leave
+            // no trace: creating an empty assessment for it would litter the term
+            // and skew the stray-assessment detection.
+            $hasAny = collect($column)->contains(fn ($v) => $v !== null && $v !== '')
+                || collect($absentColumn)->contains(fn ($v) => (int) $v === 1);
+            if (! $hasAny) {
+                continue;
+            }
+
             // Marks must fit the column's own maximum (a wizard-made test can be out
             // of 25, not 100). Reject the whole column rather than record 80/25.
             $max = (int) ($existing->max_score ?? 100);
