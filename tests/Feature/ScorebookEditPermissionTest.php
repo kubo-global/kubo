@@ -32,8 +32,14 @@ class ScorebookEditPermissionTest extends TestCase
         $offering = Offering::factory()->create(['schoolyear_id' => $this->schoolyear->id, 'grade_id' => Grade::factory()->create()->id]);
         $maths = Subject::factory()->create(['name' => 'Mathematics']);
         $arts = Subject::factory()->create(['name' => 'Arts']);
-        $offering->subjects($this->term->id)->save($maths, ['term_id' => $this->term->id]);
-        $offering->subjects($this->term->id)->save($arts, ['term_id' => $this->term->id]);
+        // An OPEN term: the grid now enforces the same term lock as the wizard,
+        // and a teacher may not write into a closed one.
+        $term = \App\Models\Term::create([
+            'name' => 'Open Term', 'schoolyear_id' => $this->schoolyear->id,
+            'start' => now()->subMonth(), 'end' => now()->addMonth(),
+        ]);
+        $offering->subjects($term->id)->save($maths, ['term_id' => $term->id]);
+        $offering->subjects($term->id)->save($arts, ['term_id' => $term->id]);
 
         $student = Student::factory()->create();
         Enrollment::factory()->create(['user_id' => $student->id, 'offering_id' => $offering->id]);
@@ -44,9 +50,9 @@ class ScorebookEditPermissionTest extends TestCase
             'is_class_teacher' => false, 'created_at' => now(), 'updated_at' => now(),
         ]);
 
-        $month = Carbon::parse($this->term->start)->format('Y-m');
+        $month = Carbon::parse($term->start)->format('Y-m');
         $this->actingAs($this->teacher)->post(route('term-grid.save', $offering), [
-            'term' => $this->term->id, 'month' => $month, 'type' => 'Test',
+            'term' => $term->id, 'month' => $month, 'type' => 'Test',
             'scores' => [$maths->id => [$student->id => '80'], $arts->id => [$student->id => '90']],
         ])->assertRedirect();
 

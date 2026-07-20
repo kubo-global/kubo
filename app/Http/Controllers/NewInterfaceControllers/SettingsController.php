@@ -180,6 +180,17 @@ class SettingsController extends Controller
             'default_max_score' => $validated['default_max_score'] ?? null,
         ]);
 
+        // Weights that don't sum to 100% silently corrupt every term total (a
+        // subject's total is the sum of weighted parts). Warn, don't block — the
+        // sum is naturally off while editing one type at a time.
+        $sum = (float) AssessmentType::where('school_id', $assessmentType->school_id)->sum('weight');
+        if (abs($sum - 1.0) > 0.001) {
+            return $this->backToTab('grading')->with(
+                'warning',
+                sprintf('Updated %s — but the weights now add up to %d%%, not 100%%. Term totals will be wrong until they do.', $assessmentType->name, round($sum * 100)),
+            );
+        }
+
         return $this->backToTab('grading')->with('success', "Updated {$assessmentType->name} settings.");
     }
 

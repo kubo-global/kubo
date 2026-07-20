@@ -124,6 +124,10 @@
                 <x-error class='mb-8'>{{ $message }}</x-error>
                 @endif
 
+                @if ($message = Session::get('warning'))
+                <div class="mb-8 rounded-md border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-800" role="alert">{{ $message }}</div>
+                @endif
+
                 @if ($wrap)
                     <div class="{{ $width }} mx-auto px-4 py-8 sm:px-6 lg:px-8">
                         {{ $slot }}
