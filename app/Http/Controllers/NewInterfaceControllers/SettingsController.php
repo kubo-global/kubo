@@ -73,6 +73,8 @@ class SettingsController extends Controller
             'staffStatuses' => \App\Models\StaffStatus::orderBy('display_order')->orderBy('label')->get(),
             'periods' => Period::ordered($school?->id)->get(),
             'reportType' => $school?->config(\App\Models\SchoolConfig::REPORT_TYPE, 'term') ?? 'term',
+            'periodMode' => $school?->config(\App\Models\SchoolConfig::SCOREBOOK_PERIOD_MODE, 'months') ?? 'months',
+            'termCardLayout' => $school?->config(\App\Models\SchoolConfig::TERM_CARD_LAYOUT, 'default') ?? 'default',
             'gradeBands' => $school ? $school->gradingScales()->whereNull('purpose')->orderBy('grade_min')->orderByDesc('min_score')->get() : collect(),
             'gateByLessonPlan' => (bool) ($school?->config(\App\Models\SchoolConfig::GATE_EXERCISES_BY_LESSON_PLAN, false)),
             'expectedHours' => json_decode((string) ($school?->config(\App\Models\SchoolConfig::EXPECTED_INSTRUCTIONAL_HOURS) ?? ''), true) ?: [],
@@ -201,6 +203,37 @@ class SettingsController extends Controller
         $validated = $request->validate(['name' => 'required|string|max:100|unique:subjects,name']);
         Subject::create($validated);
         return $this->backToTab('academic')->with('success', "Subject \"{$validated['name']}\" added.");
+    }
+
+    /**
+     * How the scorebook slices a term: loose calendar months (teacher marks each
+     * as Test or Exam) or the fixed Test 1 / Test 2 / Exam rhythm. Exposed here
+     * so a school can switch it without anyone needing server access.
+     */
+    public function updatePeriodMode(Request $request)
+    {
+        $validated = $request->validate(['period_mode' => 'required|in:months,tests']);
+        $school = School::first();
+        SchoolConfig::updateOrCreate(
+            ['school_id' => $school->id, 'key' => \App\Models\SchoolConfig::SCOREBOOK_PERIOD_MODE],
+            ['value' => $validated['period_mode']],
+        );
+        $label = $validated['period_mode'] === 'tests' ? 'Test 1 / Test 2 / Exam' : 'calendar months';
+
+        return $this->backToTab('grading')->with('success', "Score entry periods set to: {$label}.");
+    }
+
+    /** The one-page term card's layout — schools keep their own printed format. */
+    public function updateTermCardLayout(Request $request)
+    {
+        $validated = $request->validate(['term_card_layout' => 'required|in:default,albreda,swallow']);
+        $school = School::first();
+        SchoolConfig::updateOrCreate(
+            ['school_id' => $school->id, 'key' => \App\Models\SchoolConfig::TERM_CARD_LAYOUT],
+            ['value' => $validated['term_card_layout']],
+        );
+
+        return $this->backToTab('grading')->with('success', 'Term card layout set to: '.$validated['term_card_layout'].'.');
     }
 
     public function updateReportType(Request $request)

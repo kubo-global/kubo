@@ -393,6 +393,8 @@ Route::middleware(['auth', 'permission:manage settings'])->group(function () {
     Route::post('settings/subject', [SettingsController::class, 'storeSubject'])->name('settings.store-subject');
     Route::post('settings/subject/{subject}/counts-total', [SettingsController::class, 'toggleSubjectTotal'])->name('settings.toggle-subject-total');
     Route::post('settings/report-type', [SettingsController::class, 'updateReportType'])->name('settings.update-report-type');
+    Route::post('settings/period-mode', [SettingsController::class, 'updatePeriodMode'])->name('settings.update-period-mode');
+    Route::post('settings/term-card-layout', [SettingsController::class, 'updateTermCardLayout'])->name('settings.update-term-card-layout');
     Route::post('settings/grade-band', [SettingsController::class, 'storeGradeBand'])->name('settings.store-grade-band');
     Route::post('settings/grade-band/{band}', [SettingsController::class, 'updateGradeBand'])->name('settings.update-grade-band');
     Route::delete('settings/grade-band/{band}', [SettingsController::class, 'destroyGradeBand'])->name('settings.destroy-grade-band');
