@@ -174,6 +174,15 @@ class TwoTeacherTermEntryTest extends TestCase
     }
 
     #[Test]
+    public function a_fresh_term_opens_on_test_1_not_the_exam(): void
+    {
+        $this->actingAs($this->classTeacher)
+            ->get(route('term-grid.edit', ['offering' => $this->offering, 'term' => $this->openTerm->id, 'edit' => 1]))
+            ->assertOk()
+            ->assertSeeInOrder(['Entering marks for', 'Test 1'], false);
+    }
+
+    #[Test]
     public function class_teacher_first_then_french_teacher(): void
     {
         $this->classTeacherSitting();
