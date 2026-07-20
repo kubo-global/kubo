@@ -4,6 +4,7 @@ namespace App\Http\Controllers\NewInterfaceControllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\Assessment;
+use App\Models\Grade;
 use App\Models\AssessmentScore;
 use App\Models\AssessmentType;
 use App\Models\NatConfig;
@@ -40,8 +41,8 @@ class ScorebookController extends Controller
             'schoolyears' => $schoolyears,
             'selectedYear' => $selectedYear,
             'currentYearId' => $currentId,
-            // Grade order (by the number in the grade name), then section.
-            'offerings' => $offerings->sortBy(fn ($o) => sprintf('%03d-%s', (int) preg_replace('/\D/', '', $o->grade?->name ?? ''), $o->name))->values(),
+            // School reading order: nursery stages first, then grades, then section.
+            'offerings' => $offerings->sortBy(fn ($o) => Grade::sortKey($o->grade?->name).'-'.$o->name)->values(),
         ]);
     }
 

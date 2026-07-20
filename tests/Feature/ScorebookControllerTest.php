@@ -41,6 +41,21 @@ class ScorebookControllerTest extends TestCase
     }
 
     #[Test]
+    public function the_class_list_orders_nursery_before_grades(): void
+    {
+        // Created shuffled on purpose; sorting on the grade-name number alone
+        // used to interleave stages (Nursery 1, Grade 1, Nursery 2, ...).
+        foreach (['Grade 2', 'Nursery 2', 'Grade 1', 'Nursery 1', 'Grade 4', 'Nursery 3', 'Grade 3'] as $name) {
+            $this->offering(Grade::factory()->create(['name' => $name]));
+        }
+
+        $this->actingAs($this->headmaster)
+            ->get(route('reporting.grades'))
+            ->assertOk()
+            ->assertSeeInOrder(['Nursery 1', 'Nursery 2', 'Nursery 3', 'Grade 1', 'Grade 2', 'Grade 3', 'Grade 4']);
+    }
+
+    #[Test]
     public function the_class_overview_shows_a_subjects_term_assessments(): void
     {
         $offering = $this->offering();
