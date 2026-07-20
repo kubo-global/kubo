@@ -34,6 +34,13 @@ class TermResultController extends Controller
             return redirect()->route('term-grid.report', $this->periodParams($offering, $period));
         }
 
+        // The same rules save() enforces, applied before the teacher starts typing.
+        if ($period['term'] && $period['term']->isLocked() && ! $request->user()->hasAnyRole(['headmaster', 'admin'])) {
+            return redirect()->route('term-grid.report', $this->periodParams($offering, $period))
+                ->with('error', "Term \"{$period['term']->name}\" is closed. Ask the headmaster to enter or correct scores.");
+        }
+        $this->assertClassAccess($offering, $request->user());
+
         $students = $this->students($offering);
         $subjects = $period['term'] ? $this->subjects($offering, $period['term']) : collect();
 
@@ -49,9 +56,21 @@ class TermResultController extends Controller
             }
         }
 
+        // Per column: the existing assessment's max (marks must fit it) and, when it
+        // already carries scores, its type — so the grid can label a column that is
+        // pinned to e.g. Exam and save() will refuse to write it as Test.
+        $columnMeta = [];
+        foreach ($exams as $exam) {
+            $columnMeta[$exam->subject_id] = [
+                'max' => (int) $exam->max_score,
+                'type' => $exam->assessmentType->name ?? null,
+                'locked_type' => $exam->scores()->exists(),
+            ];
+        }
+
         $editableSubjects = $this->editableSubjectIds($offering, $request->user());
 
-        return view('pages.scorebook.term-grid', compact('offering', 'school', 'students', 'subjects', 'existing', 'period', 'editableSubjects'));
+        return view('pages.scorebook.term-grid', compact('offering', 'school', 'students', 'subjects', 'existing', 'period', 'editableSubjects', 'columnMeta'));
     }
 
     /**
@@ -86,6 +105,11 @@ class TermResultController extends Controller
         $period = $this->resolvePeriod($offering, $request);
         abort_unless($period['term'] && $period['date'], 400);
 
+        // Same rules as the wizard: no writes into a closed term (headmaster/admin
+        // may still correct), and a teacher must actually belong to this class.
+        $this->assertTermWritable($period['term'], $request->user());
+        $this->assertClassAccess($offering, $request->user());
+
         $request->validate([
             'type' => 'nullable|in:Test,Exam',
             'scores' => 'array',
@@ -110,18 +134,44 @@ class TermResultController extends Controller
         $editable = $this->editableSubjectIds($offering, $request->user());
 
         $absentFlags = $request->input('absent', []);
+        $skipped = [];
         foreach ($this->subjects($offering, $period['term']) as $subject) {
             if ($editable !== null && ! in_array($subject->id, $editable, true)) {
                 continue;
             }
-            $exam = $this->findOrCreateExam($offering, $subject->id, $period, $type);
+
+            // A column with marks under a DIFFERENT type (e.g. an exam entered via the
+            // wizard) must never be silently retyped or written into — that is exactly
+            // how an exam ends up weighing 0.25. Skip the column and tell the teacher.
+            $existing = $this->findExam($offering, $subject->id, $period);
+            if ($existing && $existing->assessment_type_id !== $type->id && $existing->scores()->exists()) {
+                $skipped[] = "{$subject->name} (already saved as {$existing->assessmentType->name})";
+                continue;
+            }
+
             $column = $request->input("scores.{$subject->id}", []);
             $absentColumn = $absentFlags[$subject->id] ?? [];
+
+            // Marks must fit the column's own maximum (a wizard-made test can be out
+            // of 25, not 100). Reject the whole column rather than record 80/25.
+            $max = (int) ($existing->max_score ?? 100);
+            $over = collect($column)->filter(fn ($v) => $v !== null && $v !== '' && (float) $v > $max);
+            if ($over->isNotEmpty()) {
+                $skipped[] = "{$subject->name} (marks above its maximum of {$max})";
+                continue;
+            }
+
+            $exam = $existing ?? $this->findOrCreateExam($offering, $subject->id, $period, $type);
+            if ($existing && $existing->assessment_type_id !== $type->id) {
+                // No scores yet: honouring the (re)chosen type is safe.
+                $existing->update(['assessment_type_id' => $type->id, 'name' => $period['label']]);
+            }
             foreach ($studentIds as $sid) {
                 $isAbsent = (int) ($absentColumn[$sid] ?? 0) === 1;
                 $raw = $column[$sid] ?? null;
                 if ($isAbsent) {
-                    [$score, $absent] = [0, 1];
+                    // Absent stores a null score (the model's invariant); reports read it as 0%.
+                    [$score, $absent] = [null, 1];
                 } elseif ($raw !== null && $raw !== '') {
                     [$score, $absent] = [(int) round($raw), 0];
                 } else {
@@ -134,7 +184,11 @@ class TermResultController extends Controller
             }
         }
 
-        return redirect()->route('term-grid.report', $this->periodParams($offering, $period))->with('success', 'Marks saved.');
+        $redirect = redirect()->route('term-grid.report', $this->periodParams($offering, $period));
+
+        return $skipped
+            ? $redirect->with('error', 'Not saved for: '.implode('; ', $skipped).'. The other columns were saved.')
+            : $redirect->with('success', 'Marks saved.');
     }
 
     // ---- PDFs ---------------------------------------------------------------
@@ -524,25 +578,22 @@ class TermResultController extends Controller
             ->get();
     }
 
-    private function findOrCreateExam(Offering $offering, int $subjectId, array $period, AssessmentType $type): Assessment
+    /** The period's existing assessment for a subject (the grid's month bucket), if any. */
+    private function findExam(Offering $offering, int $subjectId, array $period): ?Assessment
     {
-        $exam = Assessment::where('offering_id', $offering->id)
+        return Assessment::where('offering_id', $offering->id)
             ->where('subject_id', $subjectId)
             ->where('term_id', $period['term']->id)
             ->whereYear('date', $period['month']['y'])
             ->whereMonth('date', $period['month']['m'])
             ->first();
+    }
 
-        if ($exam) {
-            // The teacher may have (re)chosen the type on this save; keep it in sync.
-            if ($exam->assessment_type_id !== $type->id) {
-                $exam->update(['assessment_type_id' => $type->id, 'name' => $period['label']]);
-            }
-
-            return $exam;
-        }
-
-        return Assessment::create([
+    private function findOrCreateExam(Offering $offering, int $subjectId, array $period, AssessmentType $type): Assessment
+    {
+        // Retyping an existing assessment is save()'s decision (it refuses once
+        // scores exist); here we only find or create.
+        return $this->findExam($offering, $subjectId, $period) ?? Assessment::create([
             'offering_id' => $offering->id,
             'subject_id' => $subjectId,
             'term_id' => $period['term']->id,
@@ -552,6 +603,33 @@ class TermResultController extends Controller
             'max_score' => 100,
             'confirmed' => 1,
         ]);
+    }
+
+    /** The wizard's term-lock rule, applied to the grid: no writes into a closed term. */
+    private function assertTermWritable(?Term $term, $user): void
+    {
+        if (! $term || ! $term->isLocked()) {
+            return;
+        }
+        if ($user?->hasAnyRole(['headmaster', 'admin'])) {
+            return;
+        }
+        abort(403, "Term \"{$term->name}\" is closed. Ask the headmaster to enter or correct scores.");
+    }
+
+    /**
+     * A teacher may only write marks for a class they are attached to — as class
+     * teacher (teacher_offering) or as subject teacher (teacher_assignments).
+     * Oversight roles pass; anyone can still READ.
+     */
+    private function assertClassAccess(Offering $offering, $user): void
+    {
+        if ($user?->hasAnyRole(['headmaster', 'admin', 'assistant_coordinator'])) {
+            return;
+        }
+        $attached = DB::table('teacher_offering')->where('offering_id', $offering->id)->where('user_id', $user?->id)->exists()
+            || DB::table('teacher_assignments')->where('offering_id', $offering->id)->where('user_id', $user?->id)->exists();
+        abort_unless($attached, 403, 'You are not assigned to this class.');
     }
 
     private function assessmentType(?School $school, string $name, bool $create = true): ?AssessmentType

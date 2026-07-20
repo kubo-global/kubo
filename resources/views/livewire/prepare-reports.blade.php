@@ -17,7 +17,7 @@
     so there is less to write by hand. Position, average and grades are filled in automatically.
   </p>
 
-  @include('pages.scorebook._incomplete-warning', ['incomplete' => $incomplete ?? collect()])
+  @include('pages.scorebook._incomplete-warning', ['incomplete' => $incomplete ?? collect(), 'duplicates' => $duplicates ?? collect()])
 
   @if ($terms->isNotEmpty())
     <div class="flex flex-wrap items-center gap-2 mb-5">

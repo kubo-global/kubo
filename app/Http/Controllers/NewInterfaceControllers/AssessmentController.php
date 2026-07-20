@@ -164,6 +164,14 @@ class AssessmentController extends Controller
                         ->withErrors(['validation' => 'Each student must have either a score or be marked as absent.']);
                 }
 
+                // Validate here so an over-max mark is a form error, not a 500 from
+                // the model's own guard.
+                if ($hasScore && ! $isAbsent && ((float) $score > $assessment->max_score || (float) $score < 0)) {
+                    return redirect()->back()
+                        ->withInput()
+                        ->withErrors(['validation' => "Scores must be between 0 and {$assessment->max_score} (the maximum for this assessment)."]);
+                }
+
                 AssessmentScore::updateOrCreate(
                     ['assessment_id' => $assessment->id, 'user_id' => $studentId],
                     [

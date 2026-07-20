@@ -99,9 +99,18 @@
               <tr class="bg-gray-50">
                 <th class="sticky left-0 z-10 px-3 py-2 text-xs font-semibold text-left text-gray-500 uppercase bg-gray-50 border-b border-gray-200" style="width: 200px;">Pupil</th>
                 @foreach ($subjects as $s)
-                  @php $locked = $restricted && ! in_array($s->id, $editableSubjects); @endphp
+                  @php
+                    $locked = $restricted && ! in_array($s->id, $editableSubjects);
+                    $meta = $columnMeta[$s->id] ?? null;
+                    $colMax = $meta['max'] ?? 100;
+                    // A column whose assessment already carries scores under another type
+                    // is pinned there; save() refuses to rewrite it.
+                    $pinnedType = ($meta && ($meta['locked_type'] ?? false)) ? $meta['type'] : null;
+                  @endphp
                   <th class="px-2 py-2 text-xs font-semibold text-center border-b border-l border-gray-200 {{ $locked ? 'text-gray-400 bg-gray-100' : 'text-gray-600' }}" style="width: 120px;">
                     {{ $s->name }}
+                    @if ($colMax !== 100)<span class="block text-[9px] font-normal normal-case text-gray-500">out of {{ $colMax }}</span>@endif
+                    @if ($pinnedType)<span class="block text-[9px] font-normal normal-case text-amber-600">saved as {{ $pinnedType }}</span>@endif
                     @if ($locked)<span class="block text-[9px] font-normal normal-case text-gray-400">view only</span>@endif
                   </th>
                 @endforeach
@@ -126,7 +135,7 @@
                         <div class="text-center text-gray-400">{{ $isAbsent ? 'abs' : ($val === '' ? '—' : $val) }}</div>
                       @else
                       <div class="flex items-center justify-center gap-1">
-                        <input type="number" inputmode="numeric" min="0" max="100"
+                        <input type="number" inputmode="numeric" min="0" max="{{ ($columnMeta[$s->id]['max'] ?? 100) }}"
                           name="scores[{{ $s->id }}][{{ $st->id }}]" value="{{ $val }}"
                           x-bind:disabled="absent" :class="absent && 'opacity-40 bg-gray-100'"
                           aria-label="{{ $st->first_name }} {{ $st->last_name }} — {{ $s->name }}"

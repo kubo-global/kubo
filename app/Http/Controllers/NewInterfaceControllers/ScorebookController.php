@@ -145,9 +145,9 @@ class ScorebookController extends Controller
         $ranked = $term
             ? (new \App\Domain\Reporting\Services\PositionService)->rank($offering, $term, $school)
             : collect();
-        $incomplete = $term
-            ? (new \App\Domain\Reporting\Services\ReportReadiness)->incompleteSubjects($offering, $term, $school)
-            : collect();
+        $readiness = new \App\Domain\Reporting\Services\ReportReadiness;
+        $incomplete = $term ? $readiness->incompleteSubjects($offering, $term, $school) : collect();
+        $duplicates = $term ? $readiness->duplicateAssessments($offering, $term, $school) : collect();
 
         return view('pages.scorebook.positions', [
             'offering'   => $offering,
@@ -155,6 +155,7 @@ class ScorebookController extends Controller
             'terms'      => $offering->schoolyear?->terms()->orderBy('start')->get() ?? collect(),
             'ranked'     => $ranked,
             'incomplete' => $incomplete,
+            'duplicates' => $duplicates,
         ]);
     }
 

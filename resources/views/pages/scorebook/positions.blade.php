@@ -25,7 +25,7 @@
         @endforeach
       </div>
 
-      @include('pages.scorebook._incomplete-warning', ['incomplete' => $incomplete ?? collect()])
+      @include('pages.scorebook._incomplete-warning', ['incomplete' => $incomplete ?? collect(), 'duplicates' => $duplicates ?? collect()])
 
       <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
         <p class="text-sm text-gray-600">Pupils ranked by term total ({{ $offering->displayName() }}{{ $term ? ' · '.$term->name : '' }}). Subjects set to not count toward the total are excluded.</p>

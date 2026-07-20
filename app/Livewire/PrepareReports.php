@@ -107,15 +107,16 @@ class PrepareReports extends Component
                 ->values();
         }
 
-        $incomplete = $term
-            ? (new ReportReadiness())->incompleteSubjects($this->offering, $term, $school)
-            : collect();
+        $readiness = new ReportReadiness();
+        $incomplete = $term ? $readiness->incompleteSubjects($this->offering, $term, $school) : collect();
+        $duplicates = $term ? $readiness->duplicateAssessments($this->offering, $term, $school) : collect();
 
         return view('livewire.prepare-reports', [
             'terms' => $this->terms(),
             'term' => $term,
             'rows' => $rows,
             'incomplete' => $incomplete,
+            'duplicates' => $duplicates,
         ]);
     }
 
