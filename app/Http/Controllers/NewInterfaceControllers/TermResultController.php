@@ -492,8 +492,11 @@ class TermResultController extends Controller
         if (! $monthParam && $latest && $term && (int) $latest->term_id === $term->id) {
             $monthParam = Carbon::parse($latest->date)->format('Y-m');
         }
+        // No explicit period and nothing entered yet in this term: start at the
+        // FIRST bucket (Test 1), not the last — a fresh term opening on "Exam"
+        // invites the first marks to land in the wrong column.
         $month = collect($months)->firstWhere('value', $monthParam)
-            ?: ($months ? $months[count($months) - 1] : null);
+            ?: ($months ? ($monthParam ? $months[count($months) - 1] : $months[0]) : null);
 
         // A month holds one test or one exam. Use the type already on this month's
         // marks; else what the teacher chose in the form; else default to Exam.

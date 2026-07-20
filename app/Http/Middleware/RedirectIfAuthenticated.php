@@ -18,7 +18,11 @@ class RedirectIfAuthenticated
     public function handle($request, Closure $next, $guard = null)
     {
         if (Auth::guard($guard)->check()) {
-            return redirect('home');
+            // A signed-in user landing on a guest page goes to the dashboard.
+            // redirect('home') pointed at the literal /home URL, which has not
+            // existed since the legacy interface was retired (404); the dashboard
+            // route is named 'home'.
+            return redirect()->route('home');
         }
 
         return $next($request);
