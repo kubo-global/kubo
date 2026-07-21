@@ -146,7 +146,10 @@ class StudentImport extends Component
                     'password' => $sharedHash,
                     'archived' => false,
                 ]);
-                $student->assignRole($studentRole);
+                // Assign the role via the User morph: Student is an STI alias of
+                // users, and spatie stores the model class in the pivot — the
+                // login check (User::hasRole) would miss a Student-typed row.
+                \App\Models\User::query()->find($student->id)->assignRole($studentRole);
                 if ($row['gender'] || $row['birth']) {
                     Profile::create([
                         'user_id' => $student->id,
