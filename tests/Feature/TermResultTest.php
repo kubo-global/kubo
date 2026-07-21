@@ -144,4 +144,49 @@ class TermResultTest extends TestCase
             $this->assertStringStartsWith('%PDF', $response->getContent());
         }
     }
+
+    #[Test]
+    public function students_sat_counts_pupils_with_a_real_mark_not_the_class_size(): void
+    {
+        $english = Subject::where('name', 'English language')->firstOrFail();
+        $ids = Enrollment::where('offering_id', $this->offering->id)->pluck('user_id');
+
+        // Rebuild the April exam period from scratch: three pupils sat English,
+        // one was absent, the rest have no marks at all.
+        $this->actingAs($this->head)->post(route('term-grid.clear', $this->offering), [
+            'term' => $this->term2->id, 'month' => '2026-04',
+        ]);
+        $this->actingAs($this->head)->post(route('term-grid.save', $this->offering), [
+            'term' => $this->term2->id, 'month' => '2026-04', 'type' => 'Exam',
+            'scores' => [$english->id => [$ids[0] => 55, $ids[1] => 60, $ids[2] => 65]],
+            'absent' => [$english->id => [$ids[3] => 1]],
+        ]);
+
+        foreach (['term-grid.histogram', 'term-grid.bundle'] as $route) {
+            $text = $this->pdfText($this->actingAs($this->head)->get(route($route, $this->params()))->getContent());
+            $this->assertStringContainsString("NUMBEROFSTUDENTSINTHECLASS:\n{$ids->count()}\n", $text, $route);
+            $this->assertStringContainsString("NUMBEROFSTUDENTSSAT:\n3\n", $text, $route);
+        }
+    }
+
+    /**
+     * The text of a (DomPDF) PDF: inflate the content streams and take the
+     * [(...)] TJ runs. DomPDF pads glyphs with NUL/space bytes, so those are
+     * stripped; runs are newline-joined so a value can't bleed into the next run.
+     */
+    private function pdfText(string $pdf): string
+    {
+        preg_match_all('/stream\r?\n(.*?)endstream/s', $pdf, $streams);
+        $runs = [];
+        foreach ($streams[1] as $stream) {
+            $inflated = @gzuncompress($stream);
+            if ($inflated === false) {
+                continue;
+            }
+            preg_match_all('/\[\((.*?)\)\]\s*TJ/s', $inflated, $texts);
+            array_push($runs, ...$texts[1]);
+        }
+
+        return str_replace([' ', "\x00"], '', implode("\n", $runs))."\n";
+    }
 }
