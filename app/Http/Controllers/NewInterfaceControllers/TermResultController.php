@@ -56,6 +56,18 @@ class TermResultController extends Controller
             }
         }
 
+        // Letter-only ("graded") subjects are filled in by hand on the printed card,
+        // so their columns only clutter the grid. Hide them unless asked for — but a
+        // graded column that already has marks this period always stays visible, so
+        // entered data can never be out of sight.
+        $showGraded = $request->boolean('graded');
+        $gradedHidden = 0;
+        if (! $showGraded) {
+            $before = $subjects->count();
+            $subjects = $subjects->filter(fn ($s) => $s->countsTowardTotalResolved() || isset($existing[$s->id]))->values();
+            $gradedHidden = $before - $subjects->count();
+        }
+
         // Per column: the existing assessment's max (marks must fit it) and, when it
         // already carries scores, its type — so the grid can label a column that is
         // pinned to e.g. Exam and save() will refuse to write it as Test.
@@ -70,7 +82,7 @@ class TermResultController extends Controller
 
         $editableSubjects = $this->editableSubjectIds($offering, $request->user());
 
-        return view('pages.scorebook.term-grid', compact('offering', 'school', 'students', 'subjects', 'existing', 'period', 'editableSubjects', 'columnMeta'));
+        return view('pages.scorebook.term-grid', compact('offering', 'school', 'students', 'subjects', 'existing', 'period', 'editableSubjects', 'columnMeta', 'showGraded', 'gradedHidden'));
     }
 
     /**
