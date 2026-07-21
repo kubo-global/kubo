@@ -200,6 +200,32 @@ class ScoreEntryHardeningTest extends TestCase
         $this->assertSame(0, AssessmentScore::where('assessment_id', $assessment->id)->count());
     }
 
+    #[Test]
+    public function graded_subjects_hide_from_the_grid_until_asked_for_or_marked(): void
+    {
+        $pe = Subject::factory()->create(['name' => 'Physical Education', 'counts_toward_total' => false]);
+        $this->offering->subjects($this->openTerm->id)->save($pe, ['term_id' => $this->openTerm->id]);
+
+        $params = ['offering' => $this->offering, 'edit' => 1, 'term' => $this->openTerm->id];
+
+        // Hidden by default (letter-only, filled in by hand), with a toggle.
+        $this->actingAs($this->headmaster)->get(route('term-grid.edit', $params))
+            ->assertOk()
+            ->assertDontSee('Physical Education')
+            ->assertSee('Show 1 graded subject');
+
+        // Shown when asked.
+        $this->actingAs($this->headmaster)->get(route('term-grid.edit', $params + ['graded' => 1]))
+            ->assertOk()
+            ->assertSee('Physical Education');
+
+        // Once it carries marks this period, it can no longer be out of sight.
+        $this->gridSave(['scores' => [$pe->id => [$this->pupil->id => '70']], 'graded' => 1]);
+        $this->actingAs($this->headmaster)->get(route('term-grid.edit', $params))
+            ->assertOk()
+            ->assertSee('Physical Education');
+    }
+
     // ---- strays & duplicates ------------------------------------------------
 
     #[Test]

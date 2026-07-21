@@ -29,6 +29,8 @@
 
       @if ($period['terms']->isNotEmpty())
         <form method="GET" action="{{ route('term-grid.edit', $offering) }}" class="flex items-end gap-2">
+          <input type="hidden" name="edit" value="1">
+          @if ($showGraded ?? false)<input type="hidden" name="graded" value="1">@endif
           <div>
             <label class="block text-xs font-medium text-gray-500">Term</label>
             <select name="term" onchange="this.form.submit()"
@@ -71,6 +73,15 @@
           <span class="text-sm text-gray-600">Entering marks for
             <span class="font-semibold text-gray-900">{{ $period['month']['label'] ?? '' }}</span>.
           </span>
+          @if (($gradedHidden ?? 0) > 0)
+            <a href="{{ route('term-grid.edit', $pp + ['edit' => 1, 'graded' => 1]) }}"
+              class="text-sm text-indigo-600 hover:underline">
+              + Show {{ $gradedHidden }} graded subject{{ $gradedHidden === 1 ? '' : 's' }} (letter only, filled in by hand)
+            </a>
+          @elseif ($showGraded ?? false)
+            <a href="{{ route('term-grid.edit', $pp + ['edit' => 1]) }}"
+              class="text-sm text-indigo-600 hover:underline">Hide graded subjects</a>
+          @endif
           @if (empty($period['month']['type']))
             {{-- Public schools: each month is a Test or an Exam the teacher picks. --}}
             <div class="inline-flex overflow-hidden border border-gray-300 rounded-lg">
