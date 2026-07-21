@@ -130,15 +130,23 @@ class StudentImport extends Component
             return;
         }
 
-        DB::transaction(function () use ($offering, $toAdd) {
+        // A whole class at once must also finish on a Raspberry Pi: one shared
+        // random hash instead of a bcrypt per pupil (they sign in via the name
+        // picker, never with a password), the role fetched once, and no PHP time
+        // limit while the transaction runs.
+        set_time_limit(0);
+        $sharedHash = bcrypt(str()->random(24));
+        $studentRole = \Spatie\Permission\Models\Role::findByName('student');
+
+        DB::transaction(function () use ($offering, $toAdd, $sharedHash, $studentRole) {
             foreach ($toAdd as $row) {
                 $student = Student::create([
                     'first_name' => $row['first'],
                     'last_name' => $row['last'],
-                    'password' => bcrypt(str()->random(24)), // pupils sign in via the name picker
+                    'password' => $sharedHash,
                     'archived' => false,
                 ]);
-                $student->assignRole('student');
+                $student->assignRole($studentRole);
                 if ($row['gender'] || $row['birth']) {
                     Profile::create([
                         'user_id' => $student->id,
