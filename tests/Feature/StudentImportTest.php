@@ -44,6 +44,7 @@ class StudentImportTest extends TestCase
     public function a_valid_list_previews_and_imports_on_confirm(): void
     {
         $before = Student::count();
+        $roleBefore = \App\Models\User::role('student')->count();
 
         $component = Livewire::actingAs($this->headmaster)
             ->test(StudentImport::class)
@@ -59,8 +60,13 @@ class StudentImportTest extends TestCase
         $this->assertSame($before + 3, Student::count());
         $this->assertSame(3, Enrollment::where('offering_id', $this->offering->id)->count());
         $sait = Student::where('first_name', 'Sait')->where('last_name', 'Camara')->first();
-        $this->assertTrue($sait->hasRole('student'));
         $this->assertSame('M', $sait->profile?->gender); // Profile normalises gender to uppercase
+
+        // The role must hold on the USER morph: the pupil login gate checks
+        // hasRole on a User instance, and a Student-typed pivot row misses it.
+        $asUser = \App\Models\User::find($sait->id);
+        $this->assertTrue($asUser->hasRole('student'));
+        $this->assertSame($roleBefore + 3, \App\Models\User::role('student')->count());
     }
 
     #[Test]
