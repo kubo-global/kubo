@@ -165,7 +165,7 @@
         </tr>
         <tr>
           <td><b>NUMBER OF STUDENTS IN THE CLASS:</b> {{ $studentCount }}</td>
-          <td><b>NUMBER OF STUDENTS SAT:</b> {{ $studentCount }}</td>
+          <td><b>NUMBER OF STUDENTS SAT:</b> {{ $satCount }}</td>
         </tr>
       </table>
 

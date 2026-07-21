@@ -276,6 +276,7 @@ class TermResultController extends Controller
             'offering' => $offering, 'school' => $school, 'term' => $period['term'],
             'periodTitle' => $period['label'],
             'studentCount' => $this->students($offering)->count(),
+            'satCount' => $this->satCount($exams),
             'analysis' => $this->analysisData($offering, $exams, $subjects),
             'outline' => $outline,
         ])->setPaper('a4', 'portrait');
@@ -300,6 +301,7 @@ class TermResultController extends Controller
             'teacher' => $offering->principal->first(),
             'subjects' => $subjects,
             'studentCount' => $this->students($offering)->count(),
+            'satCount' => $this->satCount($exams),
             'rows' => $this->rankedRows($offering, $exams, $subjects),
             'analysis' => $this->analysisData($offering, $exams, $subjects),
             'outline' => $request->boolean('outline'),
@@ -435,6 +437,14 @@ class TermResultController extends Controller
         unset($r);
 
         return $rows;
+    }
+
+    /** Pupils who actually sat this period: at least one subject with a real (non-absent) mark. */
+    private function satCount($exams): int
+    {
+        return AssessmentScore::whereIn('assessment_id', $exams->pluck('id'))
+            ->where('absent', 0)->whereNotNull('score')
+            ->distinct()->count('user_id');
     }
 
     /** Per-subject stats keyed male/female/overall (fail < 40, pass >= 40 incl. mastery, mastery >= 80). */
