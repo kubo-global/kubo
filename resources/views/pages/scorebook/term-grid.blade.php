@@ -131,9 +131,11 @@
                     $locked = $restricted && ! in_array($s->id, $editableSubjects);
                     $meta = $columnMeta[$s->id] ?? null;
                     $colMax = $meta['max'] ?? 100;
-                    // A column whose assessment already carries scores under another type
-                    // is pinned there; save() refuses to rewrite it.
-                    $pinnedType = ($meta && ($meta['locked_type'] ?? false)) ? $meta['type'] : null;
+                    // A column whose assessment already carries scores under ANOTHER type
+                    // is pinned there; save() refuses to rewrite it. Only flag the
+                    // mismatch — on the matching period the label is just noise.
+                    $pinnedType = ($meta && ($meta['locked_type'] ?? false) && $meta['type'] !== ($period['typeName'] ?? null))
+                        ? $meta['type'] : null;
                   @endphp
                   <th class="px-2 py-2 text-xs font-semibold text-center border-b border-l border-gray-200 {{ $locked ? 'text-gray-400 bg-gray-100' : 'text-gray-600' }}" style="width: 120px;">
                     {{ $s->name }}
