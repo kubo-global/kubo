@@ -65,6 +65,10 @@ Route::get('demo', [\App\Http\Controllers\NewInterfaceControllers\DemoController
     ->name('demo.picker');
 Route::post('demo/login/{role}', [\App\Http\Controllers\NewInterfaceControllers\DemoController::class, 'login'])
     ->name('demo.login');
+// Shareable deep link: /demo/teacher etc. signs the visitor in as that persona.
+// GET-with-side-effect is fine here: DEMO_MODE only, sandbox accounts, nightly reset.
+Route::get('demo/{role}', [\App\Http\Controllers\NewInterfaceControllers\DemoController::class, 'loginLink'])
+    ->name('demo.login-link');
 
 // Demo: on-demand wipe-and-reseed (banner button). 404 unless DEMO_MODE is on.
 Route::post('demo/reset', function (\Illuminate\Http\Request $request) {

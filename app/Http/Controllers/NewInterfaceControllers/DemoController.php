@@ -86,6 +86,27 @@ class DemoController extends Controller
     }
 
     /** Sign in as this role's demo account. Also used to switch role mid-visit. */
+    /**
+     * Shareable deep link (GET /demo/{role}): "look at the demo as a teacher"
+     * becomes one URL. Pupils go through their own picker (a pupil is a class +
+     * name, not a single persona). Unknown roles fall back to the picker rather
+     * than a 404, so a mistyped shared link still lands somewhere useful.
+     */
+    public function loginLink(string $role)
+    {
+        abort_unless(config('app.demo'), 404);
+
+        $role = ['coordinator' => 'assistant_coordinator'][$role] ?? $role;
+        if ($role === 'pupil' || $role === 'student') {
+            return redirect()->route('student-login.select-grade');
+        }
+        if (! array_key_exists($role, self::ROLES)) {
+            return redirect()->route('demo.picker');
+        }
+
+        return $this->login($role);
+    }
+
     public function login(string $role)
     {
         abort_unless(config('app.demo'), 404);
