@@ -75,6 +75,7 @@ class DemoSeeder extends Seeder
     private array $scoreRows = [];       // buffered for bulk insert
     private array $currentStudentIds = []; // current-year pupils (for health records)
     private ?int $caregiverId = null;
+    private ?int $demoTeacherId = null;  // the role picker's Teacher (grade teacher persona)
     private string $pw;                    // demo password hash — computed once, reused for every account
 
     public function run(): void
@@ -123,6 +124,9 @@ class DemoSeeder extends Seeder
                         ['activated' => 1]
                     );
                     $this->attachTeachers($offering, $subjects);
+                    if ($isCurrent && in_array($gradeName, ['Grade 1', 'Grade 4'], true) && $section === $sections[0]) {
+                        $this->makeDemoTeacherPrincipal($offering);
+                    }
                     $students = $this->makeStudents($offering, mt_rand(16, 24));
                     $this->linkSubjects($offering, $subjects, $terms);
                     $this->makeScores($offering, $subjects, $terms, $students, $isCurrent, $endY);
@@ -513,6 +517,10 @@ class DemoSeeder extends Seeder
         $this->person('Isatou', 'Camara', 'headmaster', 'headmaster@demo.kubo.global');
         $this->caregiverId = $this->person('Fatoumata', 'Danso', 'caregiver', 'caregiver@demo.kubo.global')->id;
         $this->person('Alieu', 'Gaye', 'assistant_coordinator', 'coordinator@demo.kubo.global');
+        // The role picker's Teacher: created BEFORE the pool (the picker takes the
+        // lowest-id teacher) and made class teacher of Grade 1 and Grade 4 below —
+        // a grade teacher entering real term marks, the flow schools actually run.
+        $this->demoTeacherId = $this->person('Penda', 'Fofana', 'teacher', 'teacher@demo.kubo.global')->id;
 
         for ($i = 0; $i < 16; $i++) {
             [$first, $last] = $this->randomName();
@@ -572,6 +580,18 @@ class DemoSeeder extends Seeder
                 );
             }
         }
+    }
+
+    /**
+     * The role picker's Teacher leads this class: demote the randomly drawn
+     * principal and put the persona in charge, so a visitor stepping into
+     * "Teacher" gets real grade classes (Grade 1 + Grade 4) to enter marks for —
+     * the same flow a school's class teacher runs at report time.
+     */
+    private function makeDemoTeacherPrincipal(Offering $offering): void
+    {
+        DB::table('teacher_offering')->where('offering_id', $offering->id)->update(['principal' => false]);
+        $offering->teachers()->syncWithoutDetaching([$this->demoTeacherId => ['principal' => true]]);
     }
 
     private function attachTeachers(Offering $offering, array $subjects): void

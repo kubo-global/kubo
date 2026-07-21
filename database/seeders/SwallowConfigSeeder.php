@@ -50,6 +50,12 @@ class SwallowConfigSeeder extends Seeder
             ['school_id' => $school->id, 'key' => \App\Models\SchoolConfig::SCOREBOOK_PERIOD_MODE],
             ['value' => 'tests'],
         );
+
+        // And their auto-filled term card, so the demo prints what the school prints.
+        SchoolConfig::updateOrCreate(
+            ['school_id' => $school->id, 'key' => \App\Models\SchoolConfig::TERM_CARD_LAYOUT],
+            ['value' => 'swallow'],
+        );
     }
 
     private function subjects(School $school): void
