@@ -126,6 +126,7 @@
             <thead>
               <tr class="bg-gray-50">
                 <th class="sticky left-0 z-10 px-3 py-2 text-xs font-semibold text-left text-gray-500 uppercase bg-gray-50 border-b border-gray-200" style="width: 200px;">Pupil</th>
+                <th class="px-2 py-2 text-xs font-semibold text-center text-gray-500 uppercase border-b border-l border-gray-200" style="width: 60px;" title="The pupil's term total so far (saved marks, counting subjects)">Total</th>
                 @foreach ($subjects as $s)
                   @php
                     $locked = $restricted && ! in_array($s->id, $editableSubjects);
@@ -152,6 +153,7 @@
                   <td class="sticky left-0 z-10 px-3 py-2 font-medium text-gray-800 whitespace-nowrap {{ $i % 2 ? 'bg-indigo-50' : 'bg-white' }}">
                     {{ $st->last_name }} {{ $st->first_name }}
                   </td>
+                  <td class="px-2 py-2 text-center text-gray-500 border-l border-gray-100">{{ isset($termTotals[$st->id]) ? (int) round($termTotals[$st->id]['total']) : '—' }}</td>
                   @foreach ($subjects as $s)
                     @php
                       $entry = $existing[$s->id][$st->id] ?? null;
