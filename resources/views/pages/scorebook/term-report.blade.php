@@ -98,12 +98,14 @@
         <table class="min-w-full text-sm border-collapse">
           <thead>
             <tr class="text-xs text-gray-500 uppercase bg-gray-50">
+              {{-- Total/Ave/Pos sit next to the name: with a dozen subject columns
+                   they would otherwise only be visible after scrolling all the way right. --}}
               <th class="px-2 py-2 border-b border-gray-200">No</th>
               <th class="px-3 py-2 text-left border-b border-gray-200">Name</th>
-              @foreach ($subjects as $s)<th class="px-2 py-2 text-center border-b border-l border-gray-200">{{ $s->name }}</th>@endforeach
               <th class="px-2 py-2 text-center border-b border-l border-gray-200">Total</th>
               <th class="px-2 py-2 text-center border-b border-gray-200">Ave</th>
               <th class="px-2 py-2 text-center border-b border-gray-200">Pos</th>
+              @foreach ($subjects as $s)<th class="px-2 py-2 text-center border-b border-l border-gray-200">{{ $s->name }}</th>@endforeach
             </tr>
           </thead>
           <tbody>
@@ -111,6 +113,9 @@
               <tr class="{{ $i % 2 ? 'bg-indigo-50/40' : 'bg-white' }}">
                 <td class="px-2 py-1.5 text-center text-gray-500">{{ $i + 1 }}</td>
                 <td class="px-3 py-1.5 font-medium text-gray-800 whitespace-nowrap">{{ $r['student']->first_name }} {{ $r['student']->last_name }}</td>
+                <td class="px-2 py-1.5 font-bold text-center text-gray-900 border-l border-gray-100">{{ (int) round($r['total']) }}</td>
+                <td class="px-2 py-1.5 text-center text-gray-700">{{ $r['average'] }}</td>
+                <td class="px-2 py-1.5 font-semibold text-center text-gray-900">{{ $r['positionLabel'] }}</td>
                 @foreach ($subjects as $s)
                   @php $m = $r['marks'][$s->id]; @endphp
                   @if ($m === null)
@@ -119,9 +124,6 @@
                     <td class="px-2 py-1.5 text-center border-l border-gray-100 {{ $m < $passMark ? 'text-red-600 font-semibold' : 'text-gray-800' }}">{{ (int) round($m) }}</td>
                   @endif
                 @endforeach
-                <td class="px-2 py-1.5 font-bold text-center text-gray-900 border-l border-gray-100">{{ (int) round($r['total']) }}</td>
-                <td class="px-2 py-1.5 text-center text-gray-700">{{ $r['average'] }}</td>
-                <td class="px-2 py-1.5 font-semibold text-center text-gray-900">{{ $r['positionLabel'] }}</td>
               </tr>
             @endforeach
           </tbody>

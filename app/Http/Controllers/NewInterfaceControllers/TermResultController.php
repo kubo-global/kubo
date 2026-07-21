@@ -82,7 +82,13 @@ class TermResultController extends Controller
 
         $editableSubjects = $this->editableSubjectIds($offering, $request->user());
 
-        return view('pages.scorebook.term-grid', compact('offering', 'school', 'students', 'subjects', 'existing', 'period', 'editableSubjects', 'columnMeta', 'showGraded', 'gradedHidden'));
+        // Each pupil's running TERM total (the report figure), shown next to the
+        // name while entering so the teacher sees the effect of saved marks.
+        $termTotals = $period['term']
+            ? (new \App\Domain\Reporting\Services\PositionService)->rank($offering, $period['term'], $school)->keyBy('student_id')
+            : collect();
+
+        return view('pages.scorebook.term-grid', compact('offering', 'school', 'students', 'subjects', 'existing', 'period', 'editableSubjects', 'columnMeta', 'showGraded', 'gradedHidden', 'termTotals'));
     }
 
     /**
