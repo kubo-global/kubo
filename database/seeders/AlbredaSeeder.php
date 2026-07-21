@@ -224,11 +224,11 @@ class AlbredaSeeder extends Seeder
             ['schoolyear_id' => $year->id, 'grade_id' => $grade->id, 'name' => $section],
             ['activated' => 1],
         );
-        foreach ($subjectNames as $name) {
+        foreach ($subjectNames as $i => $name) {
             foreach ($terms as $t) {
                 DB::table('subject_term_offering')->updateOrInsert([
                     'offering_id' => $offering->id, 'term_id' => $t->id, 'subject_id' => $subjects[$name]->id,
-                ]);
+                ], ['sort_order' => $i + 1]);
             }
         }
 

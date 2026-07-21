@@ -170,6 +170,27 @@ class TermResultTest extends TestCase
     }
 
     #[Test]
+    public function subject_columns_follow_the_pivot_sort_order_when_set(): void
+    {
+        $pivots = \DB::table('subject_term_offering')
+            ->where('offering_id', $this->offering->id)->where('term_id', $this->term2->id)
+            ->orderBy('subject_id')->get();
+        $names = Subject::whereIn('id', $pivots->pluck('subject_id'))->orderBy('id')->pluck('name')->all();
+
+        // Reverse the configured order; the result-sheet columns must follow it.
+        foreach ($pivots as $i => $p) {
+            \DB::table('subject_term_offering')->where('id', $p->id)->update(['sort_order' => count($pivots) - $i]);
+        }
+        $this->actingAs($this->head)->get(route('term-grid.report', $this->params()))
+            ->assertSeeInOrder(array_reverse($names));
+
+        // Without sort_order the historic subject-id order still applies.
+        \DB::table('subject_term_offering')->where('offering_id', $this->offering->id)->update(['sort_order' => null]);
+        $this->actingAs($this->head)->get(route('term-grid.report', $this->params()))
+            ->assertSeeInOrder($names);
+    }
+
+    #[Test]
     public function the_bw_bundle_marks_fails_without_relying_on_colour(): void
     {
         $coloured = $this->pdfText($this->actingAs($this->head)->get(route('term-grid.bundle', $this->params()))->getContent());
