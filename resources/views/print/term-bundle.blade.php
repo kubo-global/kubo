@@ -45,6 +45,19 @@
     .legend .lt { font-weight: bold; font-size: 14px; margin-bottom: 6px; }
     .legend i { display: inline-block; width: 16px; height: 16px; margin-right: 6px; vertical-align: middle; }
     .legend span { margin-right: 26px; }
+
+    @if ($outline)
+    {{-- B&W variant: colour alone can't carry meaning on a mono printer, so
+         fails switch to underline and every tint becomes a plain grey. --}}
+    .header { border-bottom-color: #111; }
+    body, .sub, .sub b { color: #111; }
+    table.grid thead th { background: #e5e5e5; color: #111; }
+    td.subject, tr.stripe td { background: #f0f0f0; }
+    tr.overall td { background: #e5e5e5; }
+    .fail { color: #111; text-decoration: underline; }
+    .absent { color: #555; }
+    .foot, td.yaxis .tick, td.mfo { color: #333; }
+    @endif
   </style>
 </head>
 <body>
@@ -73,7 +86,8 @@
             @foreach ($subjects as $s)
               @php $m = $r['marks'][$s->id]; @endphp
               @if ($m === null)<td class="c absent">x</td>
-              @else<td class="c {{ $m < $passMark ? 'fail' : '' }}">{{ (int) round($m) }}</td>@endif
+              @elseif ($m < $passMark)<td class="c"><span class="fail">{{ (int) round($m) }}</span></td>
+              @else<td class="c">{{ (int) round($m) }}</td>@endif
             @endforeach
             <td class="c total">{{ (int) round($r['total']) }}</td>
             <td class="c">{{ $r['average'] }}</td>
@@ -83,7 +97,7 @@
       </tbody>
     </table>
     <div class="foot">
-      <span style="color:#dc2626;">Red</span> = fail (below {{ $passMark }}) &middot; x = absent.
+      @if ($outline)<span class="fail">Underlined</span>@else<span style="color:#dc2626;">Red</span>@endif = fail (below {{ $passMark }}) &middot; x = absent.
       <div class="sig">Class teacher: {{ $teacher ? $teacher->first_name.' '.$teacher->last_name : '__________________' }}
         &nbsp;&nbsp;&nbsp; Signature: __________________</div>
     </div>
