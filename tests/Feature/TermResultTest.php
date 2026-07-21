@@ -169,6 +169,19 @@ class TermResultTest extends TestCase
         }
     }
 
+    #[Test]
+    public function the_bw_bundle_marks_fails_without_relying_on_colour(): void
+    {
+        $coloured = $this->pdfText($this->actingAs($this->head)->get(route('term-grid.bundle', $this->params()))->getContent());
+        $bw = $this->pdfText($this->actingAs($this->head)->get(route('term-grid.bundle', $this->params(['outline' => 1])))->getContent());
+
+        // The colour version explains "Red = fail"; on a mono printer red is just
+        // grey, so the B&W version must switch to an ink-only marker.
+        $this->assertStringContainsString("Red\n", $coloured);
+        $this->assertStringContainsString("Underlined\n", $bw);
+        $this->assertStringNotContainsString("Red\n", $bw);
+    }
+
     /**
      * The text of a (DomPDF) PDF: inflate the content streams and take the
      * [(...)] TJ runs. DomPDF pads glyphs with NUL/space bytes, so those are
