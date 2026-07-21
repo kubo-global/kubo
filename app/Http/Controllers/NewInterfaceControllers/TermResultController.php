@@ -498,7 +498,7 @@ class TermResultController extends Controller
         $latest = Assessment::where('offering_id', $offering->id)->whereNotNull('date')->orderByDesc('date')->first();
 
         $term = $this->resolveTerm($terms, (int) $request->input('term') ?: (int) ($latest?->term_id ?? 0));
-        $months = $term ? $this->monthsIn($term) : [];
+        $months = $term ? $this->monthsIn($term, $offering) : [];
 
         $monthParam = $request->input('month');
         if (! $monthParam && $latest && $term && (int) $latest->term_id === $term->id) {
@@ -553,7 +553,7 @@ class TermResultController extends Controller
      * Test 2 and the Exam, each stored in its own month bucket (first, second, last
      * month) with a fixed type.
      */
-    private function monthsIn(Term $term): array
+    private function monthsIn(Term $term, ?Offering $offering = null): array
     {
         $start = Carbon::parse($term->start)->startOfMonth();
         $end = Carbon::parse($term->end)->startOfMonth();
@@ -570,10 +570,38 @@ class TermResultController extends Controller
             }
             $defs = [['Test 1', 'Test', $test1], ['Test 2', 'Test', $test2], ['Exam', 'Exam', $exam]];
 
-            return array_map(fn ($d) => [
+            $months = array_map(fn ($d) => [
                 'value' => $d[2]->format('Y-m'), 'label' => $d[0], 'type' => $d[1],
                 'y' => (int) $d[2]->format('Y'), 'm' => (int) $d[2]->format('n'),
             ], $defs);
+
+            // Marks can live outside the three canonical buckets — entered before the
+            // school switched to tests mode, or seeded month-style. Those months get
+            // their own bucket (named by month, typed from their data) so the marks
+            // stay reachable and a shared ?month= URL always resolves to what it names.
+            if ($offering) {
+                $known = array_column($months, 'value');
+                $extra = Assessment::where('offering_id', $offering->id)
+                    ->where('term_id', $term->id)
+                    ->whereNotNull('date')
+                    ->with('assessmentType')
+                    ->get()
+                    ->groupBy(fn ($a) => Carbon::parse($a->date)->format('Y-m'))
+                    ->reject(fn ($g, $ym) => in_array($ym, $known, true));
+
+                foreach ($extra as $ym => $group) {
+                    $d = Carbon::parse($ym.'-01');
+                    $months[] = [
+                        'value' => $ym,
+                        'label' => $d->format('F'),
+                        'type' => $group->contains(fn ($a) => ($a->assessmentType->name ?? '') === 'Exam') ? 'Exam' : 'Test',
+                        'y' => (int) $d->format('Y'), 'm' => (int) $d->format('n'),
+                    ];
+                }
+                usort($months, fn ($a, $b) => [$a['y'], $a['m']] <=> [$b['y'], $b['m']]);
+            }
+
+            return $months;
         }
 
         // Public schools: one period per calendar month; type is chosen per month.

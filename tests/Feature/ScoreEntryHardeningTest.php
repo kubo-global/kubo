@@ -55,9 +55,11 @@ class ScoreEntryHardeningTest extends TestCase
             'grade_id' => Grade::factory()->create(['name' => 'Grade 2'])->id,
         ]);
         $this->maths = Subject::factory()->create(['name' => 'Mathematics']);
+        // Four months wide, so the tests-mode buckets (first, second, last month)
+        // leave one month uncovered — room to test stray historic marks.
         $this->openTerm = Term::create([
             'name' => 'Open Term', 'schoolyear_id' => $this->schoolyear->id,
-            'start' => now()->subMonth(), 'end' => now()->addMonth(),
+            'start' => now()->subMonths(2)->startOfMonth(), 'end' => now()->addMonth(),
         ]);
         $this->offering->subjects($this->openTerm->id)->save($this->maths, ['term_id' => $this->openTerm->id]);
 
@@ -224,6 +226,25 @@ class ScoreEntryHardeningTest extends TestCase
         $this->actingAs($this->headmaster)->get(route('term-grid.edit', $params))
             ->assertOk()
             ->assertSee('Physical Education');
+    }
+
+    #[Test]
+    public function marks_outside_the_canonical_buckets_get_their_own_period(): void
+    {
+        $this->school->configs()->updateOrCreate(['key' => 'scorebook_period_mode'], ['value' => 'tests']);
+
+        // An exam entered before the school switched to tests mode, dated in a
+        // month none of the three buckets cover.
+        $stray = \Illuminate\Support\Carbon::parse($this->openTerm->start)->addMonths(2)->format('Y-m');
+        $this->wizardAssessment($this->exam, 75, $stray.'-10');
+
+        $response = $this->actingAs($this->headmaster)->get(route('term-grid.report', [
+            'offering' => $this->offering, 'term' => $this->openTerm->id, 'month' => $stray,
+        ]));
+
+        // The URL's month resolves to a real period (named by month) instead of
+        // silently falling back to the Exam bucket.
+        $response->assertOk()->assertSee(\Illuminate\Support\Carbon::parse($stray.'-01')->format('F'));
     }
 
     // ---- strays & duplicates ------------------------------------------------

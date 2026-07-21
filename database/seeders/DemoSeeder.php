@@ -672,13 +672,19 @@ class DemoSeeder extends Seeder
         $testsPerTerm = $isCurrent ? 2 : 1;
 
         foreach ($terms as $ti => $term) {
+            // Dates land on the tests-mode buckets (Test 1 = the term's first month,
+            // Test 2 = the next, Exam = the last), so the by-test scorebook shows
+            // the marks under the periods a teacher expects.
+            $termStart = \Illuminate\Support\Carbon::parse($term->start)->startOfMonth();
+            $examMonth = \Illuminate\Support\Carbon::parse($term->end)->startOfMonth();
             foreach ($subjects as $subjectName) {
                 $subjectId = $this->subjectIds[$subjectName];
                 for ($t = 1; $t <= $testsPerTerm; $t++) {
-                    $a = $this->makeAssessment('Test', $subjectId, $offering->id, $term->id, 25, "Test {$t}", "{$endY}-0".($ti + 2)."-15");
+                    $testMonth = $termStart->copy()->addMonths($t - 1);
+                    $a = $this->makeAssessment('Test', $subjectId, $offering->id, $term->id, 25, "Test {$t}", $testMonth->format('Y-m').'-15');
                     $this->bufferScores($a, $students, $ability, 25);
                 }
-                $exam = $this->makeAssessment('Exam', $subjectId, $offering->id, $term->id, 75, 'Exam', "{$endY}-0".($ti + 2)."-25");
+                $exam = $this->makeAssessment('Exam', $subjectId, $offering->id, $term->id, 75, 'Exam', $examMonth->format('Y-m').'-25');
                 $this->bufferScores($exam, $students, $ability, 75);
             }
         }
