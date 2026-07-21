@@ -114,10 +114,11 @@
           @if ($restricted)
             <span class="text-xs text-gray-500">You can edit: <b>{{ $subjects->whereIn('id', $editableSubjects)->pluck('name')->join(', ') ?: 'none of these subjects' }}</b>. Other columns are view-only.</span>
           @endif
-          @unless (app()->environment('production'))
+          {{-- The public demo runs APP_ENV=production, so gate on demo mode too. --}}
+          @if (config('app.demo') || ! app()->environment('production'))
             <button type="button" onclick="fillExampleMarks()"
               class="px-3 py-1.5 ml-auto text-sm font-medium rounded-lg text-amber-800 bg-amber-50 ring-1 ring-amber-200 hover:bg-amber-100">Fill example marks (demo)</button>
-          @endunless
+          @endif
         </div>
 
         <div class="overflow-x-auto bg-white border border-gray-200 rounded-lg shadow-sm">
