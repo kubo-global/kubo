@@ -10,12 +10,16 @@
     </nav>
 
     @php $tests = ($period['mode'] ?? 'months') === 'tests'; $byLabel = $tests ? 'By test' : 'By month'; @endphp
-    {{-- View switch: by subject / by test|month (this grid) / by term (combined) --}}
+    {{-- View switch: by subject / by test|month (this grid) / by term (combined).
+         Hidden while entering marks: the what-to-enter choice was already made,
+         and navigating away mid-entry would silently drop unsaved marks. --}}
+    @unless (request('edit'))
     <div class="inline-flex p-0.5 mt-3 rounded-lg bg-gray-100">
       <a href="{{ route('scorebook.class', $offering) }}" class="px-3 py-1.5 text-sm rounded-md text-gray-600 hover:text-gray-900">By subject</a>
       <span class="px-3 py-1.5 text-sm font-semibold text-gray-900 bg-white rounded-md shadow-sm">{{ $byLabel }}</span>
       <a href="{{ route('term-grid.overview', ['offering' => $offering, 'term' => isset($period) ? $period['term']?->id : $term?->id]) }}" class="px-3 py-1.5 text-sm rounded-md text-gray-600 hover:text-gray-900">By term</a>
     </div>
+    @endunless
 
     <div class="flex flex-wrap items-end justify-between gap-3 mt-4 mb-5">
       <div>
@@ -27,9 +31,16 @@
         </p>
       </div>
 
-      @if ($period['terms']->isNotEmpty())
+      @if (request('edit'))
+        {{-- The choice was made before entering; switching here would drop unsaved
+             marks. A static badge + a way back to change it safely. --}}
+        <div class="flex items-center gap-2 text-sm">
+          <span class="px-3 py-1.5 font-semibold text-gray-900 bg-gray-100 rounded-lg">{{ $period['term']?->name }} · {{ $period['month']['label'] ?? '' }}</span>
+          <a href="{{ route('term-grid.report', ['offering' => $offering, 'term' => $period['term']?->id, 'month' => $period['month']['value'] ?? null]) }}"
+            class="text-indigo-600 hover:underline">Change</a>
+        </div>
+      @elseif ($period['terms']->isNotEmpty())
         <form method="GET" action="{{ route('term-grid.edit', $offering) }}" class="flex items-end gap-2">
-          <input type="hidden" name="edit" value="1">
           @if ($showGraded ?? false)<input type="hidden" name="graded" value="1">@endif
           <div>
             <label class="block text-xs font-medium text-gray-500">Term</label>
@@ -75,12 +86,17 @@
           </span>
           @if (($gradedHidden ?? 0) > 0)
             <a href="{{ route('term-grid.edit', $pp + ['edit' => 1, 'graded' => 1]) }}"
-              class="text-sm text-indigo-600 hover:underline">
-              + Show {{ $gradedHidden }} graded subject{{ $gradedHidden === 1 ? '' : 's' }} (letter only, filled in by hand)
+              class="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50">
+              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+              Show {{ $gradedHidden }} graded subject{{ $gradedHidden === 1 ? '' : 's' }}
+              <span class="font-normal text-gray-500">(letter only, by hand)</span>
             </a>
           @elseif ($showGraded ?? false)
             <a href="{{ route('term-grid.edit', $pp + ['edit' => 1]) }}"
-              class="text-sm text-indigo-600 hover:underline">Hide graded subjects</a>
+              class="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50">
+              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14"/></svg>
+              Hide graded subjects
+            </a>
           @endif
           @if (empty($period['month']['type']))
             {{-- Public schools: each month is a Test or an Exam the teacher picks. --}}

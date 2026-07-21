@@ -18,6 +18,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <title>{{ 'KUBO'.(!empty($title) ? ' | '.$title : '') }}</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <link rel="icon" href="/favicon-32.png" sizes="32x32" type="image/png">
+    <link rel="icon" href="/favicon-192.png" sizes="192x192" type="image/png">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
     @livewireStyles()
 </head>
 
