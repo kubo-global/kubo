@@ -142,6 +142,11 @@ Route::middleware(['auth', 'role:headmaster|admin|teacher|assistant_coordinator'
         ->name('students.create')
         ->middleware('role:headmaster|admin');
 
+    // Bulk import: upload a class list -> validate -> preview -> confirm.
+    Route::get('students/import', fn () => view('pages.students-import'))
+        ->name('students.import')
+        ->middleware('role:headmaster|admin');
+
     Route::get('students/{student}/edit', [StudentController::class, 'edit'])
         ->name('students.edit')
         ->middleware('role:headmaster|admin');
