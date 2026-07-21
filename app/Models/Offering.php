@@ -143,26 +143,30 @@ class Offering extends Model
         // deploy) must still resolve subjects, falling back to the subject's school-wide
         // default (Subject::countsTowardTotalResolved). Only pull the pivot column when
         // it actually exists, so withPivot never selects a missing column.
-        if (static::subjectTermOfferingHasCountsColumn($this->getConnectionName())) {
+        if (static::subjectTermOfferingHasColumn('counts_toward_total', $this->getConnectionName())) {
             $relation->withPivot('counts_toward_total');
+        }
+        if (static::subjectTermOfferingHasColumn('sort_order', $this->getConnectionName())) {
+            $relation->withPivot('sort_order');
         }
 
         return $relation->wherePivot("term_id", $term->id);
     }
 
     /** Cached per connection — hasColumn hits information_schema, and subjects() runs per pupil. */
-    private static array $countsColumnByConnection = [];
+    private static array $pivotColumnsByConnection = [];
 
-    private static function subjectTermOfferingHasCountsColumn(?string $connection): bool
+    private static function subjectTermOfferingHasColumn(string $column, ?string $connection): bool
     {
         $connection = $connection ?? config('database.default');
+        $key = $connection.'.'.$column;
 
-        if (! array_key_exists($connection, static::$countsColumnByConnection)) {
-            static::$countsColumnByConnection[$connection] = \Illuminate\Support\Facades\Schema::connection($connection)
-                ->hasColumn('subject_term_offering', 'counts_toward_total');
+        if (! array_key_exists($key, static::$pivotColumnsByConnection)) {
+            static::$pivotColumnsByConnection[$key] = \Illuminate\Support\Facades\Schema::connection($connection)
+                ->hasColumn('subject_term_offering', $column);
         }
 
-        return static::$countsColumnByConnection[$connection];
+        return static::$pivotColumnsByConnection[$key];
     }
 
     public function toggle()

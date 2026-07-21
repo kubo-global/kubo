@@ -750,10 +750,15 @@ class TermResultController extends Controller
 
     private function subjects(Offering $offering, Term $term)
     {
-        // The school's own subject order (creation order = curriculum order), counting subjects first.
+        // Counting subjects first, then the school's own order: an explicit
+        // per-class sort_order when set (matching their paper sheets), else the
+        // historic subject-id order.
         return $offering->subjects($term->id)->get()
-            ->sortBy('id')
-            ->sortBy(fn ($s) => $s->countsTowardTotalResolved() ? 0 : 1)
+            ->sortBy(fn ($s) => [
+                $s->countsTowardTotalResolved() ? 0 : 1,
+                $s->pivot->sort_order !== null ? (int) $s->pivot->sort_order : PHP_INT_MAX,
+                $s->id,
+            ])
             ->values();
     }
 }
