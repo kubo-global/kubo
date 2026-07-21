@@ -493,11 +493,17 @@ class TermResultController extends Controller
     {
         $terms = $offering->schoolyear?->terms()->orderBy('start')->get() ?? collect();
 
-        // Open on the period that already has marks, so real data shows and a PDF is
-        // one click away; fall back to the current term's last month.
         $latest = Assessment::where('offering_id', $offering->id)->whereNotNull('date')->orderByDesc('date')->first();
 
-        $term = $this->resolveTerm($terms, (int) $request->input('term') ?: (int) ($latest?->term_id ?? 0));
+        // Term precedence: the URL's choice, else the term we are IN today (at entry
+        // time a fresh current term must not lose to an old term that has marks),
+        // else the term holding the most recent marks (between years), else the first.
+        $requested = (int) $request->input('term');
+        $now = now();
+        $term = ($requested ? $terms->firstWhere('id', $requested) : null)
+            ?? $terms->first(fn ($t) => $t->start <= $now && $t->end >= $now)
+            ?? ($latest ? $terms->firstWhere('id', (int) $latest->term_id) : null)
+            ?? $terms->first();
         $months = $term ? $this->monthsIn($term, $offering) : [];
 
         $monthParam = $request->input('month');

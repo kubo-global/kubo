@@ -174,6 +174,25 @@ class TwoTeacherTermEntryTest extends TestCase
     }
 
     #[Test]
+    public function the_grid_opens_on_the_current_term_even_when_an_old_term_holds_the_marks(): void
+    {
+        // Marks live in the old, ended term; today falls inside the open term.
+        $this->offering->subjects($this->term->id)->save($this->subjects['Mathematics'], ['term_id' => $this->term->id]);
+        $old = Assessment::factory()->create([
+            'assessment_type_id' => \App\Models\AssessmentType::where('name', 'Test')->first()->id,
+            'offering_id' => $this->offering->id, 'term_id' => $this->term->id,
+            'subject_id' => $this->subjects['Mathematics']->id, 'max_score' => 100,
+            'date' => \Illuminate\Support\Carbon::parse($this->term->start)->format('Y-m-d'),
+        ]);
+        \App\Models\AssessmentScore::factory()->create(['user_id' => $this->pupils[0]->id, 'assessment_id' => $old->id, 'score' => 70]);
+
+        $this->actingAs($this->classTeacher)
+            ->get(route('term-grid.edit', ['offering' => $this->offering, 'edit' => 1]))
+            ->assertOk()
+            ->assertSee('Open Term · Test 1'); // the edit badge: current term, first period
+    }
+
+    #[Test]
     public function a_fresh_term_opens_on_test_1_not_the_exam(): void
     {
         $this->actingAs($this->classTeacher)
