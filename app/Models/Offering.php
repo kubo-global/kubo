@@ -149,6 +149,9 @@ class Offering extends Model
         if (static::subjectTermOfferingHasColumn('sort_order', $this->getConnectionName())) {
             $relation->withPivot('sort_order');
         }
+        if (static::subjectTermOfferingHasColumn('core', $this->getConnectionName())) {
+            $relation->withPivot('core');
+        }
 
         return $relation->wherePivot("term_id", $term->id);
     }

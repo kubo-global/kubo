@@ -191,6 +191,33 @@ class TermResultTest extends TestCase
     }
 
     #[Test]
+    public function analysis_covers_only_core_subjects_when_flagged(): void
+    {
+        $english = Subject::where('name', 'English language')->firstOrFail();
+        $maths = Subject::where('name', 'Mathematics')->firstOrFail();
+        \DB::table('subject_term_offering')
+            ->where('offering_id', $this->offering->id)->where('term_id', $this->term2->id)
+            ->whereIn('subject_id', [$english->id, $maths->id])
+            ->update(['core' => 1]);
+
+        $sheet = $this->pdfText($this->actingAs($this->head)->get(route('term-grid.result-sheet', $this->params()))->getContent());
+        $analysis = $this->pdfText($this->actingAs($this->head)->get(route('term-grid.analysis', $this->params()))->getContent());
+
+        // The result sheet keeps every counting subject; the analysis shrinks to core.
+        $this->assertStringContainsString('Science', $sheet);
+        $this->assertStringContainsString('S.E.S.', $sheet);
+        $this->assertStringContainsString('English', $analysis);
+        $this->assertStringContainsString('Mathematics', $analysis);
+        $this->assertStringNotContainsString('Science', $analysis);
+        $this->assertStringNotContainsString('S.E.S.', $analysis);
+
+        // Without flags the analysis covers everything (other offerings untouched).
+        \DB::table('subject_term_offering')->update(['core' => null]);
+        $analysis = $this->pdfText($this->actingAs($this->head)->get(route('term-grid.analysis', $this->params()))->getContent());
+        $this->assertStringContainsString('Science', $analysis);
+    }
+
+    #[Test]
     public function the_bw_bundle_marks_fails_without_relying_on_colour(): void
     {
         $coloured = $this->pdfText($this->actingAs($this->head)->get(route('term-grid.bundle', $this->params()))->getContent());

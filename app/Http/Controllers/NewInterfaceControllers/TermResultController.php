@@ -255,7 +255,7 @@ class TermResultController extends Controller
         $pdf = PDF::loadView('print.term-analysis', [
             'offering' => $offering, 'school' => $school, 'term' => $period['term'],
             'periodTitle' => $period['label'],
-            'analysis' => $this->analysisData($offering, $exams, $subjects),
+            'analysis' => $this->analysisData($offering, $exams, $this->analysisSubjects($subjects)),
         ])->setPaper('a4', 'portrait');
 
         return $pdf->download('Analysis '.$offering->displayName().' '.$period['label'].'.pdf');
@@ -277,7 +277,7 @@ class TermResultController extends Controller
             'periodTitle' => $period['label'],
             'studentCount' => $this->students($offering)->count(),
             'satCount' => $this->satCount($exams),
-            'analysis' => $this->analysisData($offering, $exams, $subjects),
+            'analysis' => $this->analysisData($offering, $exams, $this->analysisSubjects($subjects)),
             'outline' => $outline,
         ])->setPaper('a4', 'portrait');
 
@@ -303,7 +303,7 @@ class TermResultController extends Controller
             'studentCount' => $this->students($offering)->count(),
             'satCount' => $this->satCount($exams),
             'rows' => $this->rankedRows($offering, $exams, $subjects),
-            'analysis' => $this->analysisData($offering, $exams, $subjects),
+            'analysis' => $this->analysisData($offering, $exams, $this->analysisSubjects($subjects)),
             'outline' => $request->boolean('outline'),
             'passMark' => 40,
         ])->setPaper('a4', 'portrait');
@@ -328,7 +328,7 @@ class TermResultController extends Controller
             'subjects' => $subjects,
             'studentCount' => $this->students($offering)->count(),
             'rows' => $this->rankedRows($offering, $exams, $subjects),
-            'analysis' => $this->analysisData($offering, $exams, $subjects),
+            'analysis' => $this->analysisData($offering, $exams, $this->analysisSubjects($subjects)),
             'hasMarks' => $exams->isNotEmpty(),
             'passMark' => 40,
         ]);
@@ -437,6 +437,19 @@ class TermResultController extends Controller
         unset($r);
 
         return $rows;
+    }
+
+    /**
+     * Subjects the result analysis and histogram cover: the class's flagged core
+     * subjects when any are set (a school's promotion analysis runs on core
+     * subjects only), else every counting subject — so schools without flags
+     * keep the full analysis.
+     */
+    private function analysisSubjects($countingSubjects)
+    {
+        $core = $countingSubjects->filter(fn ($s) => (int) ($s->pivot->core ?? 0) === 1)->values();
+
+        return $core->isNotEmpty() ? $core : $countingSubjects;
     }
 
     /** Pupils who actually sat this period: at least one subject with a real (non-absent) mark. */
