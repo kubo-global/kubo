@@ -206,8 +206,9 @@ class TermResultTest extends TestCase
         ]);
 
         $text = $this->pdfText($this->actingAs($this->head)->get(route('term-grid.analysis', $this->params()))->getContent());
-        // Overall row: students 3, sat 3, fail 1 (33%), pass 1 (33%) — NOT 2 — mastery 1 (33%), average 55.
-        $this->assertStringContainsString("Overall\n30\n3\n1\n33%\n1\n33%\n1\n33%\n55\n", $text);
+        // Overall row: students 30 (class), sat 3, fail 1, pass 1 — NOT 2 — mastery 1, average 55.
+        // Largest-remainder rounding makes the three percentages total exactly 100 (34+33+33).
+        $this->assertStringContainsString("Overall\n30\n3\n1\n34%\n1\n33%\n1\n33%\n55\n", $text);
         $this->assertStringNotContainsString("(includes mastery)", $text);
     }
 
