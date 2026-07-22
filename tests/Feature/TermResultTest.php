@@ -191,6 +191,27 @@ class TermResultTest extends TestCase
     }
 
     #[Test]
+    public function pass_band_excludes_mastery_so_the_bands_total_100(): void
+    {
+        $english = Subject::where('name', 'English language')->firstOrFail();
+        $ids = Enrollment::where('offering_id', $this->offering->id)->pluck('user_id');
+
+        // One fail (30), one plain pass (50), one mastery (85).
+        $this->actingAs($this->head)->post(route('term-grid.clear', $this->offering), [
+            'term' => $this->term2->id, 'month' => '2026-04',
+        ]);
+        $this->actingAs($this->head)->post(route('term-grid.save', $this->offering), [
+            'term' => $this->term2->id, 'month' => '2026-04', 'type' => 'Exam',
+            'scores' => [$english->id => [$ids[0] => 30, $ids[1] => 50, $ids[2] => 85]],
+        ]);
+
+        $text = $this->pdfText($this->actingAs($this->head)->get(route('term-grid.analysis', $this->params()))->getContent());
+        // Overall row: students 3, sat 3, fail 1 (33%), pass 1 (33%) — NOT 2 — mastery 1 (33%), average 55.
+        $this->assertStringContainsString("Overall\n30\n3\n1\n33%\n1\n33%\n1\n33%\n55\n", $text);
+        $this->assertStringNotContainsString("(includes mastery)", $text);
+    }
+
+    #[Test]
     public function analysis_covers_only_core_subjects_when_flagged(): void
     {
         $english = Subject::where('name', 'English language')->firstOrFail();

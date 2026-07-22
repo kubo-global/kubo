@@ -179,7 +179,7 @@
           </tbody>
         </table>
       </div>
-      <p class="mt-2 text-xs text-gray-500">Fail below 40 &middot; Pass 40 and above (includes mastery) &middot; Mastery 80 and above &middot; percentages of those who sat.</p>
+      <p class="mt-2 text-xs text-gray-500">Fail below 40 &middot; Pass 40&ndash;79 &middot; Mastery 80 and above &middot; percentages of those who sat.</p>
     </div>
 
     {{-- ============ Histogram ============ --}}
