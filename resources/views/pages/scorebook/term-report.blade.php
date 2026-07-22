@@ -105,7 +105,7 @@
               <th class="px-2 py-2 text-center border-b border-l border-gray-200">Total</th>
               <th class="px-2 py-2 text-center border-b border-gray-200">Ave</th>
               <th class="px-2 py-2 text-center border-b border-gray-200">Pos</th>
-              @foreach ($subjects as $s)<th class="px-2 py-2 text-center border-b border-l border-gray-200">{{ $s->name }}</th>@endforeach
+              @foreach ($displaySubjects ?? $subjects as $s)<th class="px-2 py-2 text-center border-b border-l border-gray-200">{{ $s->name }}</th>@endforeach
             </tr>
           </thead>
           <tbody>
@@ -116,9 +116,11 @@
                 <td class="px-2 py-1.5 font-bold text-center text-gray-900 border-l border-gray-100">{{ (int) round($r['total']) }}</td>
                 <td class="px-2 py-1.5 text-center text-gray-700">{{ $r['average'] }}</td>
                 <td class="px-2 py-1.5 font-semibold text-center text-gray-900">{{ $r['positionLabel'] }}</td>
-                @foreach ($subjects as $s)
-                  @php $m = $r['marks'][$s->id]; @endphp
-                  @if ($m === null)
+                @foreach ($displaySubjects ?? $subjects as $s)
+                  @php $m = $r['marks'][$s->id] ?? null; @endphp
+                  @if (! array_key_exists($s->id, $r['marks']))
+                    <td class="px-2 py-1.5 text-center border-l border-gray-100"></td>
+                  @elseif ($m === null)
                     <td class="px-2 py-1.5 text-center text-gray-300 border-l border-gray-100">x</td>
                   @else
                     <td class="px-2 py-1.5 text-center border-l border-gray-100 {{ $m < $passMark ? 'text-red-600 font-semibold' : 'text-gray-800' }}">{{ (int) round($m) }}</td>

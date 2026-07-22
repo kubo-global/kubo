@@ -74,7 +74,7 @@
         <tr>
           <th style="width:22px;">No</th>
           <th style="text-align:left;">Name</th>
-          @foreach ($subjects as $s)<th class="c">{{ $s->name }}</th>@endforeach
+          @foreach ($displaySubjects ?? $subjects as $s)<th class="c">{{ $s->name }}</th>@endforeach
           <th class="c">Total</th><th class="c">Ave</th><th class="c">Pos</th>
         </tr>
       </thead>
@@ -83,9 +83,10 @@
           <tr class="{{ $i % 2 ? 'stripe' : '' }}">
             <td class="c">{{ $i + 1 }}</td>
             <td class="name">{{ $r['student']->first_name }} {{ $r['student']->last_name }}</td>
-            @foreach ($subjects as $s)
-              @php $m = $r['marks'][$s->id]; @endphp
-              @if ($m === null)<td class="c absent">x</td>
+            @foreach ($displaySubjects ?? $subjects as $s)
+              @php $m = $r['marks'][$s->id] ?? null; @endphp
+              @if (! array_key_exists($s->id, $r['marks']))<td class="c"></td>
+              @elseif ($m === null)<td class="c absent">x</td>
               @elseif ($m < $passMark)<td class="c"><span class="fail">{{ (int) round($m) }}</span></td>
               @else<td class="c">{{ (int) round($m) }}</td>@endif
             @endforeach
