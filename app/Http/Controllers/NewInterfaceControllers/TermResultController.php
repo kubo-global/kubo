@@ -477,17 +477,30 @@ class TermResultController extends Controller
             }
             $sat = count($marks);
             $count = fn ($fn) => count(array_filter($marks, $fn));
-            $pct = fn ($n) => $sat ? (int) round($n / $sat * 100) : 0;
             // The three bands are exclusive so fail + pass + mastery totals 100%.
             $fail = $count(fn ($m) => $m < 40);
             $pass = $count(fn ($m) => $m >= 40 && $m < 80);
             $mastery = $count(fn ($m) => $m >= 80);
 
+            // Percentages must also total exactly 100, so round by largest
+            // remainder instead of independently (which can give 99 or 101).
+            $pcts = [0, 0, 0];
+            if ($sat) {
+                $shares = array_map(fn ($n) => $n / $sat * 100, [$fail, $pass, $mastery]);
+                $pcts = array_map('intval', array_map('floor', $shares));
+                $left = 100 - array_sum($pcts);
+                $order = array_keys($shares);
+                usort($order, fn ($a, $b) => ($shares[$b] - floor($shares[$b])) <=> ($shares[$a] - floor($shares[$a])) ?: $a <=> $b);
+                for ($i = 0; $i < $left; $i++) {
+                    $pcts[$order[$i % 3]]++;
+                }
+            }
+
             return [
                 'students' => $subset->count(), 'sat' => $sat,
-                'fail' => $fail, 'failPct' => $pct($fail),
-                'pass' => $pass, 'passPct' => $pct($pass),
-                'mastery' => $mastery, 'masteryPct' => $pct($mastery),
+                'fail' => $fail, 'failPct' => $pcts[0],
+                'pass' => $pass, 'passPct' => $pcts[1],
+                'mastery' => $mastery, 'masteryPct' => $pcts[2],
                 'average' => $sat ? (int) round(array_sum($marks) / $sat) : 0,
             ];
         };
