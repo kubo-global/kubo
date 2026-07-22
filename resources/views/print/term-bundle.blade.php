@@ -140,7 +140,7 @@
         @endforeach
       </tbody>
     </table>
-    <div class="foot">Fail below 40 &middot; Pass 40 and above (includes mastery) &middot; Mastery 80 and above. Percentages are of the number who sat.</div>
+    <div class="foot">Fail below 40 &middot; Pass 40&ndash;79 &middot; Mastery 80 and above. Percentages are of the number who sat.</div>
   </div>
 
   {{-- ============ 3. Histogram (up to 4 subjects per page, else split) ============ --}}

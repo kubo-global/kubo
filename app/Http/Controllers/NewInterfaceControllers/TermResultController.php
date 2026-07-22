@@ -478,8 +478,9 @@ class TermResultController extends Controller
             $sat = count($marks);
             $count = fn ($fn) => count(array_filter($marks, $fn));
             $pct = fn ($n) => $sat ? (int) round($n / $sat * 100) : 0;
+            // The three bands are exclusive so fail + pass + mastery totals 100%.
             $fail = $count(fn ($m) => $m < 40);
-            $pass = $count(fn ($m) => $m >= 40);
+            $pass = $count(fn ($m) => $m >= 40 && $m < 80);
             $mastery = $count(fn ($m) => $m >= 80);
 
             return [

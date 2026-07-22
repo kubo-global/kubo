@@ -72,7 +72,7 @@
   </table>
 
   <div class="foot">
-    Fail below 40 &middot; Pass 40 and above (includes mastery) &middot; Mastery 80 and above. Percentages are of the number who sat.
+    Fail below 40 &middot; Pass 40&ndash;79 &middot; Mastery 80 and above. Percentages are of the number who sat.
   </div>
 </body>
 </html>
