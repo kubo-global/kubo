@@ -235,6 +235,7 @@ class TermResultController extends Controller
             'periodTitle' => $period['label'],
             'teacher' => $offering->principal->first(),
             'subjects' => $subjects,
+            'displaySubjects' => $this->subjects($offering, $period['term']),
             'rows' => $this->rankedRows($offering, $exams, $subjects),
             'passMark' => 40,
         ])->setPaper('a4', 'portrait');
@@ -300,6 +301,7 @@ class TermResultController extends Controller
             'periodTitle' => $period['label'],
             'teacher' => $offering->principal->first(),
             'subjects' => $subjects,
+            'displaySubjects' => $this->subjects($offering, $period['term']),
             'studentCount' => $this->students($offering)->count(),
             'satCount' => $this->satCount($exams),
             'rows' => $this->rankedRows($offering, $exams, $subjects),
@@ -326,6 +328,7 @@ class TermResultController extends Controller
             'offering' => $offering, 'school' => $school, 'period' => $period,
             'teacher' => $offering->principal->first(),
             'subjects' => $subjects,
+            'displaySubjects' => $this->subjects($offering, $period['term']),
             'studentCount' => $this->students($offering)->count(),
             'rows' => $this->rankedRows($offering, $exams, $subjects),
             'analysis' => $this->analysisData($offering, $exams, $this->analysisSubjects($subjects)),

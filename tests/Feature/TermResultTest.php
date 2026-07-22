@@ -240,6 +240,24 @@ class TermResultTest extends TestCase
     }
 
     #[Test]
+    public function graded_subjects_appear_as_blank_columns_on_the_result_sheet(): void
+    {
+        // A hand-graded subject (no marks in KUBO, excluded from totals) must
+        // still get a blank column on the master list, and stay out of the analysis.
+        $irk = Subject::create(['name' => 'I.R.K', 'school_id' => $this->school->id, 'counts_toward_total' => false]);
+        \DB::table('subject_term_offering')->insert([
+            'offering_id' => $this->offering->id, 'term_id' => $this->term2->id,
+            'subject_id' => $irk->id, 'sort_order' => 9,
+        ]);
+
+        $before = $this->pdfText($this->actingAs($this->head)->get(route('term-grid.result-sheet', $this->params()))->getContent());
+        $this->assertStringContainsString('I.R.K', $before);
+
+        $analysis = $this->pdfText($this->actingAs($this->head)->get(route('term-grid.analysis', $this->params()))->getContent());
+        $this->assertStringNotContainsString('I.R.K', $analysis);
+    }
+
+    #[Test]
     public function the_bw_bundle_marks_fails_without_relying_on_colour(): void
     {
         $coloured = $this->pdfText($this->actingAs($this->head)->get(route('term-grid.bundle', $this->params()))->getContent());
