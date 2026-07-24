@@ -55,15 +55,24 @@
 
         <div class="col-span-4 sm:col-span-2">
           <label for="name" class="block text-sm font-medium text-gray-700">{{ $type->name }} name</label>
-          <input required type="text" name="name" id="name" value="{{ old('name') }}"
-            class="block w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-gray-900 focus:border-gray-900 sm:text-sm">
+          @if (!empty($slots))
+            <select required name="name" id="name"
+              class="block w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-gray-900 focus:border-gray-900 sm:text-sm">
+              @foreach ($slots as $slot)
+                <option value="{{ $slot }}" @selected(old('name') === $slot)>{{ $slot }}</option>
+              @endforeach
+            </select>
+          @else
+            <input required type="text" name="name" id="name" value="{{ old('name') }}"
+              class="block w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-gray-900 focus:border-gray-900 sm:text-sm">
+          @endif
         </div>
 
-        <div class="col-span-4 sm:col-span-1">
+        @if (empty($slots))<div class="col-span-4 sm:col-span-1">
           <label for="date" class="block text-sm font-medium text-gray-700">Date</label>
           <input type="date" name="date" id="date" value="{{ old('date') }}"
             class="block w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-gray-900 focus:border-gray-900 sm:text-sm">
-        </div>
+        </div>@endif
 
         <div class="col-span-4 sm:col-span-1">
           <label for="max_score" class="block text-sm font-medium text-gray-700">Maximum score</label>

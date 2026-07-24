@@ -40,4 +40,34 @@ class Term extends Model
     {
         return $this->belongsToMany(Subject::class);
     }
+
+    /**
+     * The three scorebook buckets in tests mode (The Swallow): Test 1 lives in
+     * the term's first month, Test 2 in the second, the Exam in the last. The
+     * scorebook's period dropdown and slot-based assessment creation both key
+     * off these months, so they must stay in lockstep.
+     *
+     * @return array<string, \Illuminate\Support\Carbon> slot => a date inside its month
+     */
+    public function testsBucketMonths(): array
+    {
+        $start = \Illuminate\Support\Carbon::parse($this->start)->startOfMonth();
+        $end = \Illuminate\Support\Carbon::parse($this->end)->startOfMonth();
+
+        $test1 = $start->copy();
+        $exam = $end->gt($start) ? $end->copy() : $start->copy()->addMonths(2);
+        $test2 = $start->copy()->addMonth();
+        if ($test2->gte($exam)) {
+            $test2 = $exam->copy()->subMonth();
+        }
+        if ($test2->lte($test1)) {
+            $test2 = $test1->copy()->addMonth();
+        }
+
+        return [
+            'Test 1' => $test1->copy()->addDays(14),
+            'Test 2' => $test2->copy()->addDays(14),
+            'Exam' => $exam->copy()->addDays(14),
+        ];
+    }
 }

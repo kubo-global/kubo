@@ -7,6 +7,7 @@ use App\Models\Assessment;
 use App\Models\AssessmentScore;
 use App\Models\AssessmentType;
 use App\Models\Offering;
+use App\Models\School;
 use App\Models\Schoolyear;
 use App\Models\Teacher;
 use App\Models\Term;
@@ -72,8 +73,16 @@ class AssessmentController extends Controller
             ))->values();
         }
 
+        // Tests-mode schools (The Swallow) work in fixed Test 1 / Test 2 / Exam
+        // slots per subject per term. Free-typed names put marks in stray month
+        // buckets, so the form offers the slots instead of a name field.
+        $slots = (! $isTermLess && $this->testsMode())
+            ? ($type->name === 'Exam' ? ['Exam'] : ['Test 1', 'Test 2'])
+            : null;
+
         return view('pages.assessment.create', [
             'type' => $type,
+            'slots' => $slots,
             'offerings' => $offerings,
             'terms' => $terms,
             'subjects' => $subjects,
@@ -112,6 +121,30 @@ class AssessmentController extends Controller
             abort(403, "You're not assigned to teach this subject in this class.");
         }
 
+        // Tests mode: the name must be one of the fixed slots, the date is the
+        // slot's bucket month (so the scorebook dropdown resolves it), and a
+        // subject can hold each slot only once per term.
+        if (! $isTermLess && $this->testsMode()) {
+            $allowed = $type->name === 'Exam' ? ['Exam'] : ['Test 1', 'Test 2'];
+            if (! in_array($validated['name'], $allowed, true)) {
+                return back()->withInput()->withErrors(['name' => 'Choose '.implode(' or ', $allowed).'.']);
+            }
+
+            $term = Term::findOrFail($validated['term_id']);
+            $validated['date'] = $term->testsBucketMonths()[$validated['name']]->toDateString();
+
+            $exists = Assessment::where('offering_id', $validated['offering_id'])
+                ->where('term_id', $validated['term_id'])
+                ->where('subject_id', $validated['subject_id'])
+                ->where('name', $validated['name'])
+                ->exists();
+            if ($exists) {
+                return back()->withInput()->withErrors([
+                    'name' => $validated['name'].' already exists for this subject this term. Open it from the scorebook to change its marks.',
+                ]);
+            }
+        }
+
         $assessment = Assessment::create([
             'assessment_type_id' => $validated['assessment_type_id'],
             'offering_id' => $validated['offering_id'],
@@ -124,6 +157,12 @@ class AssessmentController extends Controller
         ]);
 
         return redirect()->route('reporting.assessment.scores', $assessment);
+    }
+
+    /** Whether this school splits terms into fixed Test 1 / Test 2 / Exam slots. */
+    private function testsMode(): bool
+    {
+        return School::first()?->config(\App\Models\SchoolConfig::SCOREBOOK_PERIOD_MODE, 'months') === 'tests';
     }
 
     /**

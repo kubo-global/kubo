@@ -1,5 +1,5 @@
 <x-page title="Term report">
-  <div class="px-6 py-6 lg:px-8">
+  <div class="px-6 py-6 lg:px-8" x-data="{ tab: 'sheet' }">
 
     <nav class="text-sm text-gray-500">
       <a href="{{ route('reporting.grades') }}" class="text-indigo-600 hover:underline">Scorebook</a>
@@ -50,6 +50,18 @@
     @elseif ($rows->isEmpty())
       <p class="text-sm text-gray-500">No pupils are enrolled in this class yet.</p>
     @else
+      @if ($analysis)
+        <div class="border-b border-gray-200 mb-5">
+          <nav class="flex gap-1 -mb-px">
+            @foreach (['sheet' => 'Term marks', 'analysis' => 'Analysis', 'histogram' => 'Histogram'] as $key => $label)
+              <button type="button" @click="tab = '{{ $key }}'"
+                :class="tab === '{{ $key }}' ? 'border-indigo-600 text-indigo-700' : 'border-transparent text-gray-500 hover:text-gray-800'"
+                class="px-4 py-2.5 text-sm font-semibold border-b-2">{{ $label }}</button>
+            @endforeach
+          </nav>
+        </div>
+      @endif
+      <div x-show="tab === 'sheet'">
       <div class="overflow-x-auto bg-white border border-gray-200 rounded-lg shadow-sm">
         <table class="min-w-full text-sm border-collapse">
           <thead>
@@ -98,6 +110,13 @@
         </table>
       </div>
       <p class="mt-3 text-xs text-gray-500">Term mark per subject (Tests averaged at 25%, Exam 75%). <span class="text-amber-600">Graded</span> subjects show but are not added to the Total. Open <b>Report cards (PDF)</b> for the printable term reports.</p>
+      </div>
+      @if ($analysis)
+        @include('pages.scorebook._analysis-tabs', [
+          'analysisTitle' => ($term->name ?? 'Term').' (full term)',
+          'pdfParams' => null,
+        ])
+      @endif
     @endif
   </div>
 </x-page>

@@ -377,6 +377,9 @@ class TermResultController extends Controller
             'teacher' => $offering->principal->first(),
             'gradeNum' => (int) preg_replace('/\D/', '', $offering->grade->name ?? ''),
             'passMark' => $this->passMarkFor(),
+            'analysis' => ($term && $this->periodMode() === 'tests')
+                ? $this->termAnalysisData($offering, $rows, $this->analysisSubjects($subjects))
+                : null,
         ]);
     }
 
@@ -466,16 +469,45 @@ class TermResultController extends Controller
     /** Per-subject stats keyed male/female/overall (fail < 40, pass >= 40 incl. mastery, mastery >= 80). */
     private function analysisData(Offering $offering, $exams, $subjects)
     {
-        $students = $this->students($offering);
-        $genders = Profile::whereIn('user_id', $students->pluck('id'))->pluck('gender', 'user_id');
         $scoreMap = $this->examScores($exams);
 
-        $statsFor = function ($subset, $exam) use ($scoreMap) {
+        return $this->analysisFromMarks($offering, $subjects, function ($subj, $st) use ($exams, $scoreMap) {
+            $exam = $exams[$subj->id] ?? null;
+            $entry = $exam ? ($scoreMap[$exam->id][$st->id] ?? null) : null;
+
+            return ($entry && ! $entry['absent']) ? $entry['score'] : null;
+        });
+    }
+
+    /**
+     * Term analysis for tests-mode schools: the same fail/pass/mastery bands,
+     * but over each subject's combined TERM mark (tests 25% + exam 75%, /100)
+     * instead of a single period's raw scores. $rows come from term().
+     */
+    private function termAnalysisData(Offering $offering, $rows, $subjects)
+    {
+        $marks = [];
+        foreach ($rows as $r) {
+            foreach ($r['marks'] as $subjectName => $m) {
+                $marks[$subjectName][$r['student']->id] = $m;
+            }
+        }
+
+        return $this->analysisFromMarks($offering, $subjects, fn ($subj, $st) => $marks[$subj->name][$st->id] ?? null);
+    }
+
+    /** Shared band machinery: $markOf(subject, student) returns a /100 mark or null (absent / no scores). */
+    private function analysisFromMarks(Offering $offering, $subjects, callable $markOf)
+    {
+        $students = $this->students($offering);
+        $genders = Profile::whereIn('user_id', $students->pluck('id'))->pluck('gender', 'user_id');
+
+        $statsFor = function ($subset, $subj) use ($markOf) {
             $marks = [];
             foreach ($subset as $st) {
-                $entry = $exam ? ($scoreMap[$exam->id][$st->id] ?? null) : null;
-                if ($entry && ! $entry['absent']) {
-                    $marks[] = $entry['score'];
+                $m = $markOf($subj, $st);
+                if ($m !== null) {
+                    $marks[] = $m;
                 }
             }
             $sat = count($marks);
@@ -513,9 +545,9 @@ class TermResultController extends Controller
 
         return $subjects->map(fn ($subj) => [
             'subject' => $subj,
-            'male' => $statsFor($males, $exams[$subj->id] ?? null),
-            'female' => $statsFor($females, $exams[$subj->id] ?? null),
-            'overall' => $statsFor($students, $exams[$subj->id] ?? null),
+            'male' => $statsFor($males, $subj),
+            'female' => $statsFor($females, $subj),
+            'overall' => $statsFor($students, $subj),
         ]);
     }
 
@@ -623,16 +655,12 @@ class TermResultController extends Controller
         $end = Carbon::parse($term->end)->startOfMonth();
 
         if ($this->periodMode() === 'tests') {
-            $test1 = $start->copy();
-            $exam = $end->gt($start) ? $end->copy() : $start->copy()->addMonths(2);
-            $test2 = $start->copy()->addMonth();
-            if ($test2->gte($exam)) {
-                $test2 = $exam->copy()->subMonth();
-            }
-            if ($test2->lte($test1)) {
-                $test2 = $test1->copy()->addMonth();
-            }
-            $defs = [['Test 1', 'Test', $test1], ['Test 2', 'Test', $test2], ['Exam', 'Exam', $exam]];
+            $buckets = $term->testsBucketMonths();
+            $defs = [
+                ['Test 1', 'Test', $buckets['Test 1']],
+                ['Test 2', 'Test', $buckets['Test 2']],
+                ['Exam', 'Exam', $buckets['Exam']],
+            ];
 
             $months = array_map(fn ($d) => [
                 'value' => $d[2]->format('Y-m'), 'label' => $d[0], 'type' => $d[1],
