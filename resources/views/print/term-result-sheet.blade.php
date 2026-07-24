@@ -54,7 +54,7 @@
             @elseif ($m === null)
               <td class="c absent">x</td>
             @else
-              <td class="c {{ $m < $passMark ? 'fail' : '' }}">{{ (int) round($m) }}</td>
+              <td class="c {{ ($passMark !== null && $m < $passMark) ? 'fail' : '' }}">{{ (int) round($m) }}</td>
             @endif
           @endforeach
           <td class="c total">{{ (int) round($r['total']) }}</td>
@@ -66,7 +66,7 @@
   </table>
 
   <div class="foot">
-    <span style="color:#dc2626;">Red</span> = fail (below {{ $passMark }}) &middot; x = absent.
+    @if ($passMark !== null)<span style="color:#dc2626;">Red</span> = fail (below {{ $passMark }}) &middot; @endif x = absent.
     <div class="sig">Class teacher: {{ $teacher ? $teacher->first_name.' '.$teacher->last_name : '__________________' }}
       &nbsp;&nbsp;&nbsp; Signature: __________________</div>
   </div>

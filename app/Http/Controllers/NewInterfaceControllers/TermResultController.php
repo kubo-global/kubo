@@ -237,7 +237,7 @@ class TermResultController extends Controller
             'subjects' => $subjects,
             'displaySubjects' => $this->subjects($offering, $period['term']),
             'rows' => $this->rankedRows($offering, $exams, $subjects),
-            'passMark' => 40,
+            'passMark' => $this->passMarkFor($period),
         ])->setPaper('a4', 'portrait');
 
         return $pdf->download('Result sheet '.$offering->displayName().' '.$period['label'].'.pdf');
@@ -307,7 +307,7 @@ class TermResultController extends Controller
             'rows' => $this->rankedRows($offering, $exams, $subjects),
             'analysis' => $this->analysisData($offering, $exams, $this->analysisSubjects($subjects)),
             'outline' => $request->boolean('outline'),
-            'passMark' => 40,
+            'passMark' => $this->passMarkFor($period),
         ])->setPaper('a4', 'portrait');
 
         return $pdf->download('Results '.($request->boolean('outline') ? 'blank ' : '').$offering->displayName().' '.$period['label'].'.pdf');
@@ -333,7 +333,7 @@ class TermResultController extends Controller
             'rows' => $this->rankedRows($offering, $exams, $subjects),
             'analysis' => $this->analysisData($offering, $exams, $this->analysisSubjects($subjects)),
             'hasMarks' => $exams->isNotEmpty(),
-            'passMark' => 40,
+            'passMark' => $this->passMarkFor($period),
         ]);
     }
 
@@ -597,6 +597,21 @@ class TermResultController extends Controller
     private function periodMode(): string
     {
         return School::first()?->config(\App\Models\SchoolConfig::SCOREBOOK_PERIOD_MODE, 'months') === 'tests' ? 'tests' : 'months';
+    }
+
+    /**
+     * Fail threshold for a period, or null when fail-marking does not apply.
+     * Months mode scores each month out of 100, so 40 always holds. In tests
+     * mode only the exam (/75) has a pass mark; tests are /25 and a fixed 40
+     * would mark every score as a fail.
+     */
+    private function passMarkFor(array $period): ?int
+    {
+        if (($period['mode'] ?? 'months') !== 'tests') {
+            return 40;
+        }
+
+        return ($period['month']['type'] ?? null) === 'Exam' ? 40 : null;
     }
 
     /**
