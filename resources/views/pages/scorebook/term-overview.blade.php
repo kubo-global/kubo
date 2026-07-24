@@ -86,7 +86,7 @@
                     {{-- Graded: show the letter grade (from the marks entered), not the number. --}}
                     <td class="px-2 py-1.5 text-center border-l border-gray-100 text-gray-700">{{ \App\Models\GradingScale::resolve($school, (float) $m, $gradeNum)?->label ?? (int) round($m) }}</td>
                   @else
-                    <td class="px-2 py-1.5 text-center border-l border-gray-100 {{ $m < $passMark ? 'text-red-600 font-semibold' : 'text-gray-800' }}">{{ (int) round($m) }}</td>
+                    <td class="px-2 py-1.5 text-center border-l border-gray-100 {{ ($passMark !== null && $m < $passMark) ? 'text-red-600 font-semibold' : 'text-gray-800' }}">{{ (int) round($m) }}</td>
                   @endif
                 @endforeach
                 <td class="px-2 py-1.5 font-semibold text-center text-gray-900 border-l border-gray-100">{{ (int) round($r['total']) }}</td>

@@ -237,7 +237,7 @@ class TermResultController extends Controller
             'subjects' => $subjects,
             'displaySubjects' => $this->subjects($offering, $period['term']),
             'rows' => $this->rankedRows($offering, $exams, $subjects),
-            'passMark' => $this->passMarkFor($period),
+            'passMark' => $this->passMarkFor(),
         ])->setPaper('a4', 'portrait');
 
         return $pdf->download('Result sheet '.$offering->displayName().' '.$period['label'].'.pdf');
@@ -307,7 +307,7 @@ class TermResultController extends Controller
             'rows' => $this->rankedRows($offering, $exams, $subjects),
             'analysis' => $this->analysisData($offering, $exams, $this->analysisSubjects($subjects)),
             'outline' => $request->boolean('outline'),
-            'passMark' => $this->passMarkFor($period),
+            'passMark' => $this->passMarkFor(),
         ])->setPaper('a4', 'portrait');
 
         return $pdf->download('Results '.($request->boolean('outline') ? 'blank ' : '').$offering->displayName().' '.$period['label'].'.pdf');
@@ -333,7 +333,7 @@ class TermResultController extends Controller
             'rows' => $this->rankedRows($offering, $exams, $subjects),
             'analysis' => $this->analysisData($offering, $exams, $this->analysisSubjects($subjects)),
             'hasMarks' => $exams->isNotEmpty(),
-            'passMark' => $this->passMarkFor($period),
+            'passMark' => $this->passMarkFor(),
         ]);
     }
 
@@ -376,7 +376,7 @@ class TermResultController extends Controller
             'term' => $term, 'subjects' => $subjects, 'rows' => $rows,
             'teacher' => $offering->principal->first(),
             'gradeNum' => (int) preg_replace('/\D/', '', $offering->grade->name ?? ''),
-            'passMark' => 40,
+            'passMark' => $this->passMarkFor(),
         ]);
     }
 
@@ -600,18 +600,15 @@ class TermResultController extends Controller
     }
 
     /**
-     * Fail threshold for a period, or null when fail-marking does not apply.
-     * Months mode scores each month out of 100, so 40 always holds. In tests
-     * mode only the exam (/75) has a pass mark; tests are /25 and a fixed 40
-     * would mark every score as a fail.
+     * Fail threshold, or null when fail-marking does not apply. Months mode
+     * (public schools) scores every period out of 100, so the fixed mark of 40
+     * holds there. Tests-mode schools (The Swallow) use no colour coding at
+     * all: tests are /25, exams /75, and the school reads the sheets without
+     * a fail threshold.
      */
-    private function passMarkFor(array $period): ?int
+    private function passMarkFor(): ?int
     {
-        if (($period['mode'] ?? 'months') !== 'tests') {
-            return 40;
-        }
-
-        return ($period['month']['type'] ?? null) === 'Exam' ? 40 : null;
+        return $this->periodMode() === 'tests' ? null : 40;
     }
 
     /**

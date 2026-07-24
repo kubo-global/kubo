@@ -234,7 +234,7 @@
                 </td>
                 @foreach ($subjects as $s)
                   @php $v = $existing[$s->id][$st->id] ?? null; @endphp
-                  <td class="px-3 py-2 text-center border-l border-gray-100 {{ (is_numeric($v) && $v < 40 && (($period['mode'] ?? 'months') !== 'tests' || ($period['month']['type'] ?? null) === 'Exam')) ? 'text-red-600 font-semibold' : 'text-gray-800' }}">
+                  <td class="px-3 py-2 text-center border-l border-gray-100 {{ (is_numeric($v) && $v < 40 && ($period['mode'] ?? 'months') !== 'tests') ? 'text-red-600 font-semibold' : 'text-gray-800' }}">
                     @if ($v === '')<span class="text-gray-400">abs</span>@elseif ($v === null)<span class="text-gray-300">&ndash;</span>@else{{ $v }}@endif
                   </td>
                 @endforeach
