@@ -29,7 +29,7 @@
          applied its own bindings. --}}
     <script>
         document.documentElement.classList.add('kubo-preinit');
-        try { if (localStorage.getItem('_x_kubo-sidebar') === 'false') document.documentElement.classList.add('kubo-sb-closed'); } catch (e) {}
+        try { if (localStorage.getItem('kubo-sidebar') === 'false') document.documentElement.classList.add('kubo-sb-closed'); } catch (e) {}
     </script>
     <style>
         html.kubo-preinit [data-sidebar] { width: 14rem; }
