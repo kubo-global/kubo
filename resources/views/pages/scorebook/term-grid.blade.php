@@ -74,7 +74,24 @@
       <p class="text-sm text-gray-500">No subjects are set up for this class this term. Add them in Settings.</p>
     @elseif (request('edit'))
       {{-- Edit mode: the editable grid --}}
-      <form method="POST" action="{{ route('term-grid.save', $offering) }}">
+      {{-- Marks autosave a moment after each change; the button remains as the
+           explicit finish (and the only path without JavaScript). --}}
+      <form method="POST" action="{{ route('term-grid.save', $offering) }}"
+        x-data="{
+          saving: false, savedAt: null, dirty: false,
+          async autosave() {
+            if (! this.dirty || this.saving) return;
+            this.dirty = false; this.saving = true;
+            try {
+              const res = await fetch(this.$el.action, {
+                method: 'POST', body: new FormData(this.$el),
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }, credentials: 'same-origin',
+              });
+              if (res.ok) this.savedAt = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            } finally { this.saving = false; if (this.dirty) this.autosave(); }
+          },
+        }"
+        @input="dirty = true" @input.debounce.2000ms="autosave()">
         @csrf
         <input type="hidden" name="term" value="{{ $period['term']->id }}">
         <input type="hidden" name="month" value="{{ $period['month']['value'] ?? '' }}">
@@ -212,7 +229,7 @@
                           aria-label="{{ $st->first_name }} {{ $st->last_name }} — {{ $s->name }}"
                           class="w-16 px-2 py-1.5 text-center text-gray-900 border rounded-md focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 {{ ! isset($columnMeta[$s->id]) ? 'border-dashed border-gray-400 bg-white/60' : 'border-gray-300' }}">
                         <input type="hidden" name="absent[{{ $s->id }}][{{ $st->id }}]" :value="absent ? 1 : 0">
-                        <button type="button" @click="absent = !absent" title="Mark {{ $st->first_name }} absent for {{ $s->name }}"
+                        <button type="button" @click="absent = !absent; $dispatch('input')" title="Mark {{ $st->first_name }} absent for {{ $s->name }}"
                           :class="absent ? 'bg-gray-400 text-white' : 'text-gray-400 hover:bg-gray-100 ring-1 ring-gray-200'"
                           class="px-2 py-1.5 text-[10px] font-semibold uppercase rounded-md shrink-0">abs</button>
                       </div>
@@ -228,6 +245,10 @@
         {{-- Sticky action bar: Save stays in view however far the grid is scrolled. --}}
         <div class="sticky bottom-0 z-30 flex flex-wrap items-center justify-between gap-3 px-4 py-3 mt-4 -mx-1 bg-white/95 backdrop-blur border-t border-gray-200 rounded-t-lg shadow-[0_-4px_12px_rgba(0,0,0,0.06)]">
           <a href="{{ route('term-grid.report', $pp) }}" class="text-sm font-medium text-gray-500 hover:text-gray-800">&larr; Cancel</a>
+          <span class="text-sm text-gray-500" aria-live="polite">
+            <span x-show="saving">Saving&hellip;</span>
+            <span x-show="! saving && savedAt" x-cloak>Saved &check; <span x-text="savedAt"></span></span>
+          </span>
           <button type="submit" class="px-5 py-2.5 text-sm font-semibold text-white rounded-lg bg-indigo-600 hover:bg-indigo-700">Save marks</button>
         </div>
       </form>
