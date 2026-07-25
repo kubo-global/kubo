@@ -176,7 +176,7 @@
                       $val = is_numeric($entry) ? $entry : '';
                       $locked = $restricted && ! in_array($s->id, $editableSubjects);
                     @endphp
-                    <td class="px-3 py-3 border-l border-gray-100 {{ $locked ? 'bg-gray-50' : (! isset($columnMeta[$s->id]) ? 'bg-gray-50/80' : '') }}" x-data="{ absent: {{ $isAbsent ? 'true' : 'false' }} }">
+                    <td class="px-3 py-3 border-l border-gray-100 {{ $locked ? 'bg-gray-50' : (! isset($columnMeta[$s->id]) ? 'bg-gray-100/80' : '') }}" x-data="{ absent: {{ $isAbsent ? 'true' : 'false' }} }">
                       @if ($locked)
                         {{-- Not this teacher's subject: show the mark read-only, no inputs submitted. --}}
                         <div class="text-center text-gray-400">{{ $isAbsent ? 'abs' : ($val === '' ? '—' : $val) }}</div>
@@ -186,7 +186,7 @@
                           name="scores[{{ $s->id }}][{{ $st->id }}]" value="{{ $val }}"
                           x-bind:disabled="absent" :class="absent && 'opacity-40 bg-gray-100'"
                           aria-label="{{ $st->first_name }} {{ $st->last_name }} — {{ $s->name }}"
-                          class="w-16 px-2 py-1.5 text-center text-gray-900 border border-gray-300 rounded-md focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500">
+                          class="w-16 px-2 py-1.5 text-center text-gray-900 border rounded-md focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 {{ ! isset($columnMeta[$s->id]) ? 'border-dashed border-gray-400 bg-white/60' : 'border-gray-300' }}">
                         <input type="hidden" name="absent[{{ $s->id }}][{{ $st->id }}]" :value="absent ? 1 : 0">
                         <button type="button" @click="absent = !absent" title="Mark {{ $st->first_name }} absent for {{ $s->name }}"
                           :class="absent ? 'bg-gray-400 text-white' : 'text-gray-400 hover:bg-gray-100 ring-1 ring-gray-200'"
