@@ -62,9 +62,9 @@
         </div>
       @endif
       <div x-show="tab === 'sheet'">
-      <div class="overflow-x-auto bg-white border border-gray-200 rounded-lg shadow-sm">
+      <div class="overflow-auto max-h-[75vh] bg-white border border-gray-200 rounded-lg shadow-sm">
         <table class="min-w-full text-sm border-collapse">
-          <thead>
+          <thead class="sticky top-0 z-20 bg-gray-50">
             <tr class="text-xs text-gray-500 uppercase bg-gray-50">
               <th class="px-2 py-2 border-b border-gray-200">No</th>
               <th class="px-3 py-2 text-left border-b border-gray-200">Name</th>

@@ -84,11 +84,11 @@
 
     {{-- read-only Test/Exam table for the selected subject + term --}}
     @if ($subject && $assessments->isNotEmpty())
-      <div class="overflow-x-auto border border-gray-200 rounded-lg shadow-sm">
+      <div class="overflow-auto max-h-[75vh] border border-gray-200 rounded-lg shadow-sm">
         <table class="min-w-full text-sm divide-y divide-gray-200">
-          <thead class="bg-gray-50">
+          <thead class="sticky top-0 z-20 bg-gray-50">
             <tr>
-              <th class="sticky left-0 px-4 py-3 text-xs font-semibold tracking-wide text-left text-gray-500 uppercase bg-gray-50">Student</th>
+              <th class="sticky left-0 z-30 px-4 py-3 text-xs font-semibold tracking-wide text-left text-gray-500 uppercase bg-gray-50">Student</th>
               @foreach ($assessments as $a)
                 <th class="px-4 py-2 text-right">
                   <span class="block text-[10px] font-normal text-gray-500">{{ $a->assessmentType->name ?? '' }}</span>

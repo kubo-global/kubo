@@ -94,9 +94,9 @@
         <p class="text-sm text-gray-700">Internal assessment result sheet for <b>{{ $offering->displayName() }}</b> &middot; {{ $period['term']->name }} {{ $period['label'] }} &middot; {{ $offering->schoolyear->name ?? '' }}.</p>
         <a href="{{ route('term-grid.result-sheet', $pp) }}" class="text-sm text-indigo-600 hover:underline whitespace-nowrap">Download this sheet (PDF)</a>
       </div>
-      <div class="overflow-x-auto bg-white border border-gray-200 rounded-lg shadow-sm">
+      <div class="overflow-auto max-h-[75vh] bg-white border border-gray-200 rounded-lg shadow-sm">
         <table class="min-w-full text-sm border-collapse">
-          <thead>
+          <thead class="sticky top-0 z-20 bg-gray-50">
             <tr class="text-xs text-gray-500 uppercase bg-gray-50">
               {{-- Total/Ave/Pos sit next to the name: with a dozen subject columns
                    they would otherwise only be visible after scrolling all the way right. --}}
