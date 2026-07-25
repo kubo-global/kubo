@@ -138,7 +138,7 @@
                     $pinnedType = ($meta && ($meta['locked_type'] ?? false) && $meta['type'] !== ($period['typeName'] ?? null))
                         ? $meta['type'] : null;
                   @endphp
-                  <th class="px-3 py-2.5 text-xs font-semibold text-center border-b border-l border-gray-200 {{ $locked ? 'text-gray-400 bg-gray-100' : (! $meta ? 'text-gray-400' : 'text-gray-600') }}" style="min-width: 148px;">
+                  <th class="group px-3 py-2.5 text-xs font-semibold text-center border-b border-l border-gray-200 {{ $locked ? 'text-gray-400 bg-gray-100' : (! $meta ? 'text-gray-400' : 'text-gray-600') }}" style="min-width: 148px;">
                     {{ $s->name }}
                     @if (! $meta && ! $locked)
                       {{-- No assessment yet for this period: announce the default max, allow changing it before first save. --}}
@@ -160,7 +160,8 @@
                       <span class="block mt-0.5 text-[11px] font-normal normal-case text-gray-500" x-data="{ editMax: false }">
                         <template x-if="! editMax">
                           <span class="inline-block whitespace-nowrap">out of {{ $colMax }}
-                            <button type="button" @click="editMax = true" class="ml-0.5 underline text-indigo-400 hover:text-indigo-600">change</button>
+                            <button type="button" @click="editMax = true"
+                              class="ml-0.5 underline text-indigo-400 hover:text-indigo-600 opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity">change</button>
                           </span>
                         </template>
                         <template x-if="editMax">
