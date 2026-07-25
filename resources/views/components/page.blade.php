@@ -30,7 +30,7 @@
     {{-- min-h-screen on phones: without it the shell is only as tall as its content,
          so a page with little on it (an empty lesson-plan list) left the canvas
          colour stopping halfway down and white underneath. --}}
-    <div class="flex flex-col bg-white min-h-screen sm:h-screen" x-data="{ sidebarOpen: true }">
+    <div class="flex flex-col bg-white min-h-screen sm:h-screen" x-data="{ sidebarOpen: $persist(true).as('kubo-sidebar') }">
         @if (config('app.demo'))
         @php
             $demoRoles = \App\Http\Controllers\NewInterfaceControllers\DemoController::availableRoles();
