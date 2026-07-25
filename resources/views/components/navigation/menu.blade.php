@@ -30,7 +30,7 @@
 </div>
 <!-- Static sidebar for desktop — collapsible -->
 <div class="hidden lg:flex lg:flex-shrink-0">
-    <div class="flex flex-col border-r border-gray-200 pt-3 pb-4 bg-gray-100 transition-all duration-200"
+    <div data-sidebar class="flex flex-col border-r border-gray-200 pt-3 pb-4 bg-gray-100 transition-all duration-200"
          :class="sidebarOpen ? 'w-56' : 'w-12'">
         <div class="flex items-center flex-shrink-0" :class="sidebarOpen ? 'px-4' : 'px-2'">
             <template x-if="sidebarOpen">

@@ -23,6 +23,19 @@
     <link rel="icon" href="/favicon-192.png" sizes="192x192" type="image/png">
     <link rel="apple-touch-icon" href="/apple-touch-icon.png">
     @livewireStyles()
+    {{-- Paint the sidebar in its remembered width before Alpine boots, so a
+         collapsed menu doesn't flash open on every page load. The kubo-preinit
+         scope (and the transition freeze) is dropped as soon as Alpine has
+         applied its own bindings. --}}
+    <script>
+        document.documentElement.classList.add('kubo-preinit');
+        try { if (localStorage.getItem('_x_kubo-sidebar') === 'false') document.documentElement.classList.add('kubo-sb-closed'); } catch (e) {}
+    </script>
+    <style>
+        html.kubo-preinit [data-sidebar] { width: 14rem; }
+        html.kubo-preinit.kubo-sb-closed [data-sidebar] { width: 3rem; }
+        html.kubo-preinit [data-sidebar], html.kubo-preinit [data-sidebar] * { transition: none !important; }
+    </style>
 </head>
 
 <body>
@@ -30,7 +43,7 @@
     {{-- min-h-screen on phones: without it the shell is only as tall as its content,
          so a page with little on it (an empty lesson-plan list) left the canvas
          colour stopping halfway down and white underneath. --}}
-    <div class="flex flex-col bg-white min-h-screen sm:h-screen" x-data="{ sidebarOpen: $persist(true).as('kubo-sidebar') }">
+    <div class="flex flex-col bg-white min-h-screen sm:h-screen" x-data="{ sidebarOpen: $persist(true).as('kubo-sidebar') }" x-init="$nextTick(() => document.documentElement.classList.remove('kubo-preinit', 'kubo-sb-closed'))">
         @if (config('app.demo'))
         @php
             $demoRoles = \App\Http\Controllers\NewInterfaceControllers\DemoController::availableRoles();
