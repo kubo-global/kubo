@@ -57,6 +57,37 @@ class ReportReadiness
     }
 
     /**
+     * Started assessments (some marks saved) where enrolled pupils still have no
+     * score row at all. Empty is not absent: an empty cell is skipped in the
+     * average while absent counts as 0, so forgotten gaps quietly flatter the
+     * report. Surfaced before printing with a one-click "mark absent" repair.
+     *
+     * @return Collection<int, array{assessment_id:int, subject:string, name:string, user_ids:array<int,int>}>
+     */
+    public function emptyCells(Offering $offering, Term $term): Collection
+    {
+        $enrolled = $offering->enrollments()->pluck('user_id');
+
+        return Assessment::where('offering_id', $offering->id)
+            ->where('term_id', $term->id)
+            ->whereHas('scores')
+            ->with(['subject', 'scores'])
+            ->get()
+            ->map(function ($a) use ($enrolled) {
+                $missing = $enrolled->diff($a->scores->pluck('user_id'))->values();
+
+                return $missing->isEmpty() ? null : [
+                    'assessment_id' => $a->id,
+                    'subject' => $a->subject->name ?? '',
+                    'name' => $a->name,
+                    'user_ids' => $missing->all(),
+                ];
+            })
+            ->filter()
+            ->values();
+    }
+
+    /**
      * Subjects with MORE than one assessment of the same weighted type this term —
      * usually a stray (an extra test made through the wizard, or an exam saved as
      * a second test). The average silently mixes them, so surface it before print.

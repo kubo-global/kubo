@@ -145,4 +145,26 @@ class PrepareReportsTest extends TestCase
             ->call('prepareReports')
             ->assertRedirect(route('term-report.prepare', ['offering' => $offering->id, 'term' => $this->term->id]));
     }
+
+    #[\PHPUnit\Framework\Attributes\Test]
+    public function empty_cells_can_be_marked_absent_in_one_click(): void
+    {
+        ['offering' => $offering, 'top' => $top] = $this->scoredClass();
+
+        // A third pupil enrolled but never scored: two empty cells (test + exam).
+        $ghost = Student::factory()->create(['first_name' => 'Ghost', 'last_name' => 'Pupil']);
+        Enrollment::factory()->create(['user_id' => $ghost->id, 'offering_id' => $offering->id]);
+
+        Livewire::actingAs($this->headmaster)
+            ->test(PrepareReports::class, ['offering' => $offering])
+            ->set('termId', $this->term->id)
+            ->call('markEmptyCellsAbsent');
+
+        $rows = \App\Models\AssessmentScore::where('user_id', $ghost->id)->get();
+        $this->assertCount(2, $rows);
+        $this->assertTrue($rows->every(fn ($r) => $r->absent && $r->score === null));
+
+        // Scored pupils untouched.
+        $this->assertSame(90, (int) \App\Models\AssessmentScore::where('user_id', $top->id)->orderBy('assessment_id')->first()->score);
+    }
 }

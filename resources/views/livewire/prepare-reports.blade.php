@@ -19,6 +19,26 @@
 
   @include('pages.scorebook._incomplete-warning', ['incomplete' => $incomplete ?? collect(), 'duplicates' => $duplicates ?? collect()])
 
+  @if (session('empty-cells-marked'))
+    <div class="p-3 mb-4 text-sm rounded-lg text-green-800 bg-green-50 ring-1 ring-green-200">
+      {{ session('empty-cells-marked') }} empty {{ \Illuminate\Support\Str::plural('cell', session('empty-cells-marked')) }} marked absent.
+    </div>
+  @endif
+  @if (($emptyCells ?? collect())->isNotEmpty())
+    @php $emptyTotal = $emptyCells->sum(fn ($c) => count($c['user_ids'])); @endphp
+    <div class="flex flex-wrap items-center justify-between gap-3 p-3 mb-4 text-sm rounded-lg text-amber-900 bg-amber-50 ring-1 ring-amber-200">
+      <div>
+        <b>{{ $emptyTotal }} empty {{ \Illuminate\Support\Str::plural('cell', $emptyTotal) }}</b> in tests/exams that already have marks
+        ({{ $emptyCells->map(fn ($c) => $c['subject'].' '.$c['name'].' ('.count($c['user_ids']).')')->join(', ') }}).
+        Empty is skipped in the average; absent counts as 0.
+      </div>
+      <button type="button" wire:click="markEmptyCellsAbsent"
+        wire:confirm="Mark all {{ $emptyTotal }} empty cells as absent? This counts them as 0 on the report."
+        class="px-3 py-1.5 font-semibold rounded-md text-white bg-amber-600 hover:bg-amber-700 whitespace-nowrap">Mark them absent</button>
+      @error('emptyCells')<span class="w-full text-red-700">{{ $message }}</span>@enderror
+    </div>
+  @endif
+
   @if ($terms->isNotEmpty())
     <div class="flex flex-wrap items-center gap-2 mb-5">
       <span class="text-sm text-gray-500">Term</span>

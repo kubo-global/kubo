@@ -63,6 +63,37 @@ class PrepareReports extends Component
      * flash is handled client-side by Alpine on the returned promise.
      */
     #[\Livewire\Attributes\Renderless]
+    /**
+     * Fill every empty cell of the term's started assessments with a proper
+     * absence (score null, absent flag set), so the printed report counts the
+     * gap as 0 instead of silently skipping it.
+     */
+    public function markEmptyCellsAbsent(): void
+    {
+        $term = Term::find($this->termId);
+        if (! $term) {
+            return;
+        }
+        if ($term->isLocked() && ! auth()->user()->hasAnyRole(['headmaster', 'admin'])) {
+            $this->addError('emptyCells', "Term \"{$term->name}\" is closed. Ask the headmaster.");
+
+            return;
+        }
+
+        $now = now();
+        $cells = (new ReportReadiness())->emptyCells($this->offering, $term);
+        foreach ($cells as $cell) {
+            foreach ($cell['user_ids'] as $userId) {
+                \Illuminate\Support\Facades\DB::table('assessment_scores')->updateOrInsert(
+                    ['assessment_id' => $cell['assessment_id'], 'user_id' => $userId],
+                    ['score' => null, 'absent' => 1, 'created_at' => $now, 'updated_at' => $now],
+                );
+            }
+        }
+
+        session()->flash('empty-cells-marked', $cells->sum(fn ($c) => count($c['user_ids'])));
+    }
+
     public function saveRemark(int $enrollmentId): void
     {
         if (! $this->termId) {
@@ -109,6 +140,7 @@ class PrepareReports extends Component
 
         $readiness = new ReportReadiness();
         $incomplete = $term ? $readiness->incompleteSubjects($this->offering, $term, $school) : collect();
+        $emptyCells = $term ? $readiness->emptyCells($this->offering, $term) : collect();
         $duplicates = $term ? $readiness->duplicateAssessments($this->offering, $term, $school) : collect();
 
         return view('livewire.prepare-reports', [
@@ -116,6 +148,7 @@ class PrepareReports extends Component
             'term' => $term,
             'rows' => $rows,
             'incomplete' => $incomplete,
+            'emptyCells' => $emptyCells,
             'duplicates' => $duplicates,
         ]);
     }
