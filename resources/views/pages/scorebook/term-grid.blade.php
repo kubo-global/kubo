@@ -161,7 +161,7 @@
                         <template x-if="! editMax">
                           <span class="inline-block whitespace-nowrap">out of {{ $colMax }}
                             <button type="button" @click="editMax = true"
-                              class="ml-0.5 underline text-indigo-400 hover:text-indigo-600 opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity">change</button>
+                              class="ml-0.5 text-gray-400 underline decoration-dotted underline-offset-2 hover:text-indigo-600">change</button>
                           </span>
                         </template>
                         <template x-if="editMax">
