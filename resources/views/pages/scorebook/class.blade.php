@@ -84,7 +84,7 @@
 
     {{-- read-only Test/Exam table for the selected subject + term --}}
     @if ($subject && $assessments->isNotEmpty())
-      <div class="overflow-auto max-h-[calc(100vh-16rem)] min-h-[24rem] border border-gray-200 rounded-lg shadow-sm">
+      <div class="overflow-auto max-h-[calc(100vh_-_16rem)] min-h-[24rem] border border-gray-200 rounded-lg shadow-sm">
         <table class="min-w-full text-sm divide-y divide-gray-200">
           <thead class="sticky top-0 z-20 bg-gray-50">
             <tr>
