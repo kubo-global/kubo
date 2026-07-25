@@ -142,12 +142,13 @@
                     {{ $s->name }}
                     @if (! $meta && ! $locked)
                       {{-- No assessment yet for this period: announce the default max, allow changing it before first save. --}}
-                      <span class="block mt-0.5 text-[11px] font-normal normal-case text-gray-500 whitespace-nowrap" x-data="{ editMax: false }">
+                      <span class="block mt-0.5 text-[11px] font-normal normal-case text-gray-500" x-data="{ editMax: false }">
                         <template x-if="! editMax">
-                          <span class="whitespace-nowrap">
-                            <span class="inline-block px-1.5 py-0.5 mr-1 rounded bg-gray-100 text-gray-500 ring-1 ring-gray-200 whitespace-nowrap">not started</span>
-                            out of {{ $defaultMax }}
-                            <button type="button" @click="editMax = true" class="ml-0.5 underline text-indigo-500 hover:text-indigo-700">change</button>
+                          <span>
+                            <span class="inline-block px-1.5 py-0.5 rounded bg-gray-200/80 text-gray-600 whitespace-nowrap">not started</span>
+                            <span class="inline-block whitespace-nowrap">out of {{ $defaultMax }}
+                              <button type="button" @click="editMax = true" class="ml-0.5 underline text-indigo-500 hover:text-indigo-700">change</button>
+                            </span>
                           </span>
                         </template>
                         <template x-if="editMax">
