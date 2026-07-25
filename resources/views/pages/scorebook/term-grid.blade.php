@@ -121,7 +121,7 @@
           @endif
         </div>
 
-        <div class="overflow-auto max-h-[75vh] bg-white border border-gray-200 rounded-lg shadow-sm">
+        <div class="overflow-auto max-h-[calc(100vh-19rem)] min-h-[24rem] bg-white border border-gray-200 rounded-lg shadow-sm">
           <table class="text-sm border-collapse table-fixed" style="width: 100%; min-width: {{ 200 + $subjects->count() * 120 }}px;">
             <thead class="sticky top-0 z-20 bg-gray-50">
               <tr class="bg-gray-50">
@@ -161,7 +161,7 @@
                       $val = is_numeric($entry) ? $entry : '';
                       $locked = $restricted && ! in_array($s->id, $editableSubjects);
                     @endphp
-                    <td class="px-3 py-2.5 border-l border-gray-100 {{ $locked ? 'bg-gray-50' : '' }}" x-data="{ absent: {{ $isAbsent ? 'true' : 'false' }} }">
+                    <td class="px-3 py-3 border-l border-gray-100 {{ $locked ? 'bg-gray-50' : '' }}" x-data="{ absent: {{ $isAbsent ? 'true' : 'false' }} }">
                       @if ($locked)
                         {{-- Not this teacher's subject: show the mark read-only, no inputs submitted. --}}
                         <div class="text-center text-gray-400">{{ $isAbsent ? 'abs' : ($val === '' ? '—' : $val) }}</div>
@@ -217,7 +217,7 @@
         </div>
       </div>
 
-      <div class="overflow-auto max-h-[75vh] bg-white border border-gray-200 rounded-lg shadow-sm">
+      <div class="overflow-auto max-h-[calc(100vh-19rem)] min-h-[24rem] bg-white border border-gray-200 rounded-lg shadow-sm">
         <table class="min-w-full text-sm border-collapse">
           <thead class="sticky top-0 z-20 bg-gray-50">
             <tr class="bg-gray-50">
