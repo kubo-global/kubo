@@ -88,7 +88,9 @@ class TermResultController extends Controller
             ? (new \App\Domain\Reporting\Services\PositionService)->rank($offering, $period['term'], $school)->keyBy('student_id')
             : collect();
 
-        return view('pages.scorebook.term-grid', compact('offering', 'school', 'students', 'subjects', 'existing', 'period', 'editableSubjects', 'columnMeta', 'showGraded', 'gradedHidden', 'termTotals'));
+        $defaultMax = $this->defaultMaxFor($period);
+
+        return view('pages.scorebook.term-grid', compact('offering', 'school', 'students', 'subjects', 'existing', 'period', 'editableSubjects', 'columnMeta', 'showGraded', 'gradedHidden', 'termTotals', 'defaultMax'));
     }
 
     /**
@@ -135,6 +137,8 @@ class TermResultController extends Controller
             'scores.*.*' => 'nullable|numeric|min:0|max:100',
             'absent' => 'array',
             'absent.*' => 'array',
+            'max' => 'array',
+            'max.*' => 'nullable|integer|min:1|max:100',
         ]);
 
         // Type: the period's fixed type (Swallow Test 1/2/Exam), else what the teacher
@@ -181,14 +185,15 @@ class TermResultController extends Controller
 
             // Marks must fit the column's own maximum (a wizard-made test can be out
             // of 25, not 100). Reject the whole column rather than record 80/25.
-            $max = (int) ($existing->max_score ?? 100);
+            $max = (int) ($existing->max_score
+                ?? ((int) $request->input("max.{$subject->id}") ?: $this->defaultMaxFor($period)));
             $over = collect($column)->filter(fn ($v) => $v !== null && $v !== '' && (float) $v > $max);
             if ($over->isNotEmpty()) {
                 $skipped[] = "{$subject->name} (marks above its maximum of {$max})";
                 continue;
             }
 
-            $exam = $existing ?? $this->findOrCreateExam($offering, $subject->id, $period, $type);
+            $exam = $existing ?? $this->findOrCreateExam($offering, $subject->id, $period, $type, $max);
             if ($existing && $existing->assessment_type_id !== $type->id) {
                 // No scores yet: honouring the (re)chosen type is safe.
                 $existing->update(['assessment_type_id' => $type->id, 'name' => $period['label']]);
@@ -733,7 +738,7 @@ class TermResultController extends Controller
             ->first();
     }
 
-    private function findOrCreateExam(Offering $offering, int $subjectId, array $period, AssessmentType $type): Assessment
+    private function findOrCreateExam(Offering $offering, int $subjectId, array $period, AssessmentType $type, int $maxScore = 100): Assessment
     {
         // Retyping an existing assessment is save()'s decision (it refuses once
         // scores exist); here we only find or create.
@@ -744,9 +749,22 @@ class TermResultController extends Controller
             'assessment_type_id' => $type->id,
             'name' => $period['label'],
             'date' => $period['date'],
-            'max_score' => 100,
+            'max_score' => $maxScore,
             'confirmed' => 1,
         ]);
+    }
+
+    /**
+     * Max for a column that has no assessment yet. Tests-mode schools score
+     * tests out of 25 and exams out of 75; months mode works out of 100.
+     */
+    private function defaultMaxFor(array $period): int
+    {
+        if (($period['mode'] ?? 'months') !== 'tests') {
+            return 100;
+        }
+
+        return (($period['month']['type'] ?? null) === 'Exam') ? 75 : 25;
     }
 
     /** The wizard's term-lock rule, applied to the grid: no writes into a closed term. */

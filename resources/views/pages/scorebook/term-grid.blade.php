@@ -131,7 +131,7 @@
                   @php
                     $locked = $restricted && ! in_array($s->id, $editableSubjects);
                     $meta = $columnMeta[$s->id] ?? null;
-                    $colMax = $meta['max'] ?? 100;
+                    $colMax = $meta['max'] ?? ($defaultMax ?? 100);
                     // A column whose assessment already carries scores under ANOTHER type
                     // is pinned there; save() refuses to rewrite it. Only flag the
                     // mismatch — on the matching period the label is just noise.
@@ -140,7 +140,21 @@
                   @endphp
                   <th class="px-3 py-2.5 text-xs font-semibold text-center border-b border-l border-gray-200 {{ $locked ? 'text-gray-400 bg-gray-100' : 'text-gray-600' }}" style="min-width: 148px;">
                     {{ $s->name }}
-                    @if ($colMax !== 100)<span class="block text-[9px] font-normal normal-case text-gray-500">out of {{ $colMax }}</span>@endif
+                    @if (! $meta && ! $locked)
+                      {{-- No assessment yet for this period: announce the default max, allow changing it before first save. --}}
+                      <span class="block text-[9px] font-normal normal-case text-gray-500" x-data="{ editMax: false }">
+                        <template x-if="! editMax">
+                          <span>out of {{ $defaultMax }} &middot;
+                            <button type="button" @click="editMax = true" class="underline text-indigo-500 hover:text-indigo-700">change</button>
+                            <span class="ml-1 px-1 py-0.5 rounded bg-amber-50 text-amber-700 ring-1 ring-amber-200">not started</span>
+                          </span>
+                        </template>
+                        <template x-if="editMax">
+                          <span>out of <input type="number" name="max[{{ $s->id }}]" value="{{ $defaultMax }}" min="1" max="100"
+                            class="w-12 px-1 py-0.5 text-center border border-gray-300 rounded"></span>
+                        </template>
+                      </span>
+                    @elseif ($colMax !== 100)<span class="block text-[9px] font-normal normal-case text-gray-500">out of {{ $colMax }}</span>@endif
                     @if ($pinnedType)<span class="block text-[9px] font-normal normal-case text-amber-600">saved as {{ $pinnedType }}</span>@endif
                     @if ($locked)<span class="block text-[9px] font-normal normal-case text-gray-400">view only</span>@endif
                   </th>

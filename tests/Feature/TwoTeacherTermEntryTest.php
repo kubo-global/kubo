@@ -120,23 +120,24 @@ class TwoTeacherTermEntryTest extends TestCase
     private function classTeacherSitting(): void
     {
         // Phonics is the single-test subject: it only appears in Test 1 and the Exam.
+        // Tests are entered out of 25, the exam out of 75 (the grid's tests-mode defaults).
         $this->saveGrid($this->classTeacher, 'test1', [
-            'Mathematics' => [84, 60], 'English' => [70, 50], 'Phonics' => [80, 40],
+            'Mathematics' => [21, 15], 'English' => [18, 12], 'Phonics' => [20, 10],
         ]);
         $this->saveGrid($this->classTeacher, 'test2', [
-            'Mathematics' => [56, 40], 'English' => [90, 70],
+            'Mathematics' => [14, 10], 'English' => [22, 17],
         ]);
         $this->saveGrid($this->classTeacher, 'exam', [
-            'Mathematics' => [80, 60], 'English' => [60, 80], 'Phonics' => [60, 80],
+            'Mathematics' => [60, 45], 'English' => [45, 60], 'Phonics' => [45, 60],
         ]);
     }
 
     /** The French teacher's sitting: same periods, French only. */
     private function frenchTeacherSitting(): void
     {
-        $this->saveGrid($this->frenchTeacher, 'test1', ['French' => [90, 50]]);
-        $this->saveGrid($this->frenchTeacher, 'test2', ['French' => [70, 30]]);
-        $this->saveGrid($this->frenchTeacher, 'exam', ['French' => [80, 40]]);
+        $this->saveGrid($this->frenchTeacher, 'test1', ['French' => [22, 12]]);
+        $this->saveGrid($this->frenchTeacher, 'test2', ['French' => [18, 7]]);
+        $this->saveGrid($this->frenchTeacher, 'exam', ['French' => [60, 30]]);
     }
 
     private function assertTermIsRight(): void
@@ -145,11 +146,11 @@ class TwoTeacherTermEntryTest extends TestCase
         $results = (new NewTermReportRepository($enrollment, $this->openTerm, $this->school))
             ->getReportData()['results'];
 
-        // Pupil 1 — weighted 0.25/0.75:
-        // Mathematics: tests (84+56)/2=70 -> 18; exam 80 -> 60; total 78.
-        // English:     tests (70+90)/2=80 -> 20; exam 60 -> 45; total 65.
-        // Phonics:     single test 80    -> 20; exam 60 -> 45; total 65.
-        // French:      tests (90+70)/2=80 -> 20; exam 80 -> 60; total 80.
+        // Pupil 1 — weighted 0.25/0.75, tests /25 and exam /75:
+        // Mathematics: tests (84%+56%)/2=70% -> 18; exam 60/75=80% -> 60; total 78.
+        // English:     tests (72%+88%)/2=80% -> 20; exam 45/75=60% -> 45; total 65.
+        // Phonics:     single test 20/25=80% -> 20; exam 45/75=60% -> 45; total 65.
+        // French:      tests (88%+72%)/2=80% -> 20; exam 60/75=80% -> 60; total 80.
         $this->assertSame(78.0, (float) $results['subjectResults']['Mathematics']['subjectTotal']);
         $this->assertSame(65.0, (float) $results['subjectResults']['English']['subjectTotal']);
         $this->assertSame(65.0, (float) $results['subjectResults']['Phonics']['subjectTotal']);
@@ -229,7 +230,7 @@ class TwoTeacherTermEntryTest extends TestCase
             'term' => $this->openTerm->id,
             'month' => $this->periods['exam'],
             'scores' => [
-                $this->subjects['French']->id => [$this->pupils[0]->id => '80', $this->pupils[1]->id => '40'],
+                $this->subjects['French']->id => [$this->pupils[0]->id => '60', $this->pupils[1]->id => '30'],
                 $this->subjects['Mathematics']->id => [$this->pupils[0]->id => '1'],
             ],
         ])->assertRedirect();
@@ -237,6 +238,30 @@ class TwoTeacherTermEntryTest extends TestCase
         $mathsExam = Assessment::where('offering_id', $this->offering->id)
             ->where('subject_id', $this->subjects['Mathematics']->id)
             ->whereMonth('date', (int) substr($this->periods['exam'], 5))->first();
-        $this->assertSame(80, (int) $mathsExam->scores()->where('user_id', $this->pupils[0]->id)->value('score'));
+        $this->assertSame(60, (int) $mathsExam->scores()->where('user_id', $this->pupils[0]->id)->value('score'));
+    }
+
+    #[Test]
+    public function a_fresh_column_takes_the_tests_mode_default_max(): void
+    {
+        $this->saveGrid($this->classTeacher, 'test1', ['Mathematics' => [20, 10]]);
+        $this->saveGrid($this->classTeacher, 'exam', ['Mathematics' => [70, 40]]);
+
+        $max = fn (string $period) => (int) Assessment::where('offering_id', $this->offering->id)
+            ->where('subject_id', $this->subjects['Mathematics']->id)
+            ->whereMonth('date', (int) substr($this->periods[$period], 5))->value('max_score');
+        $this->assertSame(25, $max('test1'));
+        $this->assertSame(75, $max('exam'));
+
+        // A teacher-chosen max on a brand-new column is honoured.
+        $this->actingAs($this->classTeacher)->post(route('term-grid.save', $this->offering), [
+            'term' => $this->openTerm->id,
+            'month' => $this->periods['test1'],
+            'scores' => [$this->subjects['Phonics']->id => [$this->pupils[0]->id => '18']],
+            'max' => [$this->subjects['Phonics']->id => 20],
+        ])->assertRedirect()->assertSessionHas('success');
+
+        $this->assertSame(20, (int) Assessment::where('offering_id', $this->offering->id)
+            ->where('subject_id', $this->subjects['Phonics']->id)->value('max_score'));
     }
 }
