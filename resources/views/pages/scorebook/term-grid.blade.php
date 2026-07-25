@@ -138,7 +138,7 @@
                     $pinnedType = ($meta && ($meta['locked_type'] ?? false) && $meta['type'] !== ($period['typeName'] ?? null))
                         ? $meta['type'] : null;
                   @endphp
-                  <th class="px-2 py-2 text-xs font-semibold text-center border-b border-l border-gray-200 {{ $locked ? 'text-gray-400 bg-gray-100' : 'text-gray-600' }}" style="width: 120px;">
+                  <th class="px-3 py-2.5 text-xs font-semibold text-center border-b border-l border-gray-200 {{ $locked ? 'text-gray-400 bg-gray-100' : 'text-gray-600' }}" style="min-width: 148px;">
                     {{ $s->name }}
                     @if ($colMax !== 100)<span class="block text-[9px] font-normal normal-case text-gray-500">out of {{ $colMax }}</span>@endif
                     @if ($pinnedType)<span class="block text-[9px] font-normal normal-case text-amber-600">saved as {{ $pinnedType }}</span>@endif
@@ -153,7 +153,7 @@
                   <td class="sticky left-0 z-10 px-3 py-2 font-medium text-gray-800 whitespace-nowrap {{ $i % 2 ? 'bg-indigo-50' : 'bg-white' }}">
                     {{ $st->first_name }} {{ $st->last_name }}
                   </td>
-                  <td class="px-2 py-2 text-center text-gray-500 border-l border-gray-100">{{ isset($termTotals[$st->id]) ? (int) round($termTotals[$st->id]['total']) : '—' }}</td>
+                  <td class="px-3 py-2.5 text-center text-gray-500 border-l border-gray-100">{{ isset($termTotals[$st->id]) ? (int) round($termTotals[$st->id]['total']) : '—' }}</td>
                   @foreach ($subjects as $s)
                     @php
                       $entry = $existing[$s->id][$st->id] ?? null;
@@ -161,21 +161,21 @@
                       $val = is_numeric($entry) ? $entry : '';
                       $locked = $restricted && ! in_array($s->id, $editableSubjects);
                     @endphp
-                    <td class="px-1 py-1 border-l border-gray-100 {{ $locked ? 'bg-gray-50' : '' }}" x-data="{ absent: {{ $isAbsent ? 'true' : 'false' }} }">
+                    <td class="px-3 py-2.5 border-l border-gray-100 {{ $locked ? 'bg-gray-50' : '' }}" x-data="{ absent: {{ $isAbsent ? 'true' : 'false' }} }">
                       @if ($locked)
                         {{-- Not this teacher's subject: show the mark read-only, no inputs submitted. --}}
                         <div class="text-center text-gray-400">{{ $isAbsent ? 'abs' : ($val === '' ? '—' : $val) }}</div>
                       @else
-                      <div class="flex items-center justify-center gap-1">
+                      <div class="flex items-center justify-center gap-2">
                         <input type="number" inputmode="numeric" min="0" max="{{ ($columnMeta[$s->id]['max'] ?? 100) }}"
                           name="scores[{{ $s->id }}][{{ $st->id }}]" value="{{ $val }}"
                           x-bind:disabled="absent" :class="absent && 'opacity-40 bg-gray-100'"
                           aria-label="{{ $st->first_name }} {{ $st->last_name }} — {{ $s->name }}"
-                          class="w-12 px-1 py-1 text-center text-gray-900 border border-gray-300 rounded focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500">
+                          class="w-16 px-2 py-1.5 text-center text-gray-900 border border-gray-300 rounded-md focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500">
                         <input type="hidden" name="absent[{{ $s->id }}][{{ $st->id }}]" :value="absent ? 1 : 0">
                         <button type="button" @click="absent = !absent" title="Mark {{ $st->first_name }} absent for {{ $s->name }}"
                           :class="absent ? 'bg-gray-400 text-white' : 'text-gray-400 hover:bg-gray-100 ring-1 ring-gray-200'"
-                          class="px-1.5 py-1 text-[10px] font-semibold uppercase rounded shrink-0">abs</button>
+                          class="px-2 py-1.5 text-[10px] font-semibold uppercase rounded-md shrink-0">abs</button>
                       </div>
                       @endif
                     </td>
@@ -223,7 +223,7 @@
             <tr class="bg-gray-50">
               <th class="sticky left-0 z-30 px-3 py-2 text-xs font-semibold text-left text-gray-500 uppercase bg-gray-50 border-b border-gray-200">Pupil</th>
               @foreach ($subjects as $s)
-                <th class="px-3 py-2 text-xs font-semibold text-center text-gray-600 border-b border-l border-gray-200" style="width: 120px;">{{ $s->name }}</th>
+                <th class="px-3 py-2 text-xs font-semibold text-center text-gray-600 border-b border-l border-gray-200" style="min-width: 148px;">{{ $s->name }}</th>
               @endforeach
             </tr>
           </thead>
