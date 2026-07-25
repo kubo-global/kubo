@@ -90,7 +90,24 @@
               if (res.ok) this.savedAt = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
             } finally { this.saving = false; if (this.dirty) this.autosave(); }
           },
+          nav(e) {
+            const el = e.target;
+            if (! el.matches('input[data-r]')) return;
+            const moves = { ArrowUp: [-1, 0], ArrowDown: [1, 0], ArrowLeft: [0, -1], ArrowRight: [0, 1], Enter: [1, 0] };
+            const step = moves[e.key];
+            if (! step) return;
+            e.preventDefault();
+            let r = parseInt(el.dataset.r) + step[0], c = parseInt(el.dataset.c) + step[1];
+            // skip gaps (locked/graded cells have no input) up to the grid edge
+            for (let i = 0; i < 40; i++) {
+              const next = this.$el.querySelector(`input[data-r="${r}"][data-c="${c}"]`);
+              if (next) { next.focus(); next.select(); return; }
+              r += step[0]; c += step[1];
+              if (r < 0 || c < 0) return;
+            }
+          },
         }"
+        @keydown="nav($event)"
         @input="dirty = true" @input.debounce.2000ms="autosave()">
         @csrf
         <input type="hidden" name="term" value="{{ $period['term']->id }}">
@@ -225,6 +242,7 @@
                       <div class="flex items-center justify-center gap-2">
                         <input type="number" inputmode="numeric" min="0" max="{{ ($columnMeta[$s->id]['max'] ?? 100) }}"
                           name="scores[{{ $s->id }}][{{ $st->id }}]" value="{{ $val }}"
+                          data-r="{{ $i }}" data-c="{{ $loop->index }}" @focus="$event.target.select()"
                           x-bind:disabled="absent" :class="absent && 'opacity-40 bg-gray-100'"
                           aria-label="{{ $st->first_name }} {{ $st->last_name }} — {{ $s->name }}"
                           class="w-16 px-2 py-1.5 text-center text-gray-900 border rounded-md focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 {{ ! isset($columnMeta[$s->id]) ? 'border-dashed border-gray-400 bg-white/60' : 'border-gray-300' }}">
