@@ -188,7 +188,11 @@ class TermResultController extends Controller
             // column, e.g. when the paper test turns out to be out of 50 — but
             // never below a score that is already recorded, since every stored
             // mark is read against this scale.
-            $requestedMax = (int) $request->input("max.{$subject->id}") ?: null;
+            // Tests-mode scales are fixed school-wide (tests /25, exams /75), so a
+            // posted max is ignored there; months-mode schools may set one per column.
+            $requestedMax = $this->periodMode() === 'tests'
+                ? null
+                : ((int) $request->input("max.{$subject->id}") ?: null);
             if ($existing) {
                 $max = (int) $existing->max_score;
                 if ($requestedMax && $requestedMax !== $max) {

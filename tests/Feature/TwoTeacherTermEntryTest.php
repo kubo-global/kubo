@@ -253,7 +253,8 @@ class TwoTeacherTermEntryTest extends TestCase
         $this->assertSame(25, $max('test1'));
         $this->assertSame(75, $max('exam'));
 
-        // A teacher-chosen max on a brand-new column is honoured.
+        // Tests-mode scales are fixed: a posted max override is ignored and the
+        // column still lands on the school-wide default.
         $this->actingAs($this->classTeacher)->post(route('term-grid.save', $this->offering), [
             'term' => $this->openTerm->id,
             'month' => $this->periods['test1'],
@@ -261,31 +262,7 @@ class TwoTeacherTermEntryTest extends TestCase
             'max' => [$this->subjects['Phonics']->id => 20],
         ])->assertRedirect()->assertSessionHas('success');
 
-        $this->assertSame(20, (int) Assessment::where('offering_id', $this->offering->id)
+        $this->assertSame(25, (int) Assessment::where('offering_id', $this->offering->id)
             ->where('subject_id', $this->subjects['Phonics']->id)->value('max_score'));
-    }
-
-    #[Test]
-    public function an_existing_columns_max_can_change_but_never_below_an_entered_mark(): void
-    {
-        $this->saveGrid($this->classTeacher, 'test1', ['Mathematics' => [20, 10]]);
-        $maths = fn () => Assessment::where('offering_id', $this->offering->id)
-            ->where('subject_id', $this->subjects['Mathematics']->id)->firstOrFail();
-
-        // Raising the max is honoured.
-        $this->actingAs($this->classTeacher)->post(route('term-grid.save', $this->offering), [
-            'term' => $this->openTerm->id, 'month' => $this->periods['test1'],
-            'scores' => [$this->subjects['Mathematics']->id => [$this->pupils[0]->id => '30']],
-            'max' => [$this->subjects['Mathematics']->id => 50],
-        ])->assertRedirect()->assertSessionHas('success');
-        $this->assertSame(50, (int) $maths()->max_score);
-
-        // Lowering below the highest recorded mark (30) is refused, max unchanged.
-        $this->actingAs($this->classTeacher)->post(route('term-grid.save', $this->offering), [
-            'term' => $this->openTerm->id, 'month' => $this->periods['test1'],
-            'scores' => [$this->subjects['Mathematics']->id => []],
-            'max' => [$this->subjects['Mathematics']->id => 25],
-        ])->assertRedirect();
-        $this->assertSame(50, (int) $maths()->max_score);
     }
 }

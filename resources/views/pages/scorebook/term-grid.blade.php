@@ -142,6 +142,13 @@
                     {{ $s->name }}
                     @if (! $meta && ! $locked)
                       {{-- No assessment yet for this period: announce the default max, allow changing it before first save. --}}
+                      @if ($tests)
+                      {{-- The Swallow's scales are fixed: tests /25, exams /75 — no per-column max. --}}
+                      <span class="block mt-0.5 text-[11px] font-normal normal-case text-gray-500">
+                        <span class="inline-block px-1.5 py-0.5 rounded bg-gray-200/80 text-gray-600 whitespace-nowrap">not started</span>
+                        <span class="inline-block whitespace-nowrap">out of {{ $defaultMax }}</span>
+                      </span>
+                      @else
                       <span class="block mt-0.5 text-[11px] font-normal normal-case text-gray-500" x-data="{ editMax: false }">
                         <template x-if="! editMax">
                           <span>
@@ -156,6 +163,9 @@
                             class="w-14 px-1 py-0.5 text-center border border-gray-300 rounded"></span>
                         </template>
                       </span>
+                      @endif
+                    @elseif ($tests)
+                      <span class="block mt-0.5 text-[11px] font-normal normal-case text-gray-500">out of {{ $colMax }}</span>
                     @elseif (! $locked)
                       <span class="block mt-0.5 text-[11px] font-normal normal-case text-gray-500" x-data="{ editMax: false }">
                         <template x-if="! editMax">
