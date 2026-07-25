@@ -125,7 +125,7 @@
           <table class="text-sm border-collapse table-fixed" style="width: 100%; min-width: {{ 200 + $subjects->count() * 120 }}px;">
             <thead class="sticky top-0 z-20 bg-gray-50">
               <tr class="bg-gray-50">
-                <th class="sticky left-0 z-30 px-3 py-2 text-xs font-semibold text-left text-gray-500 uppercase bg-gray-50 border-b border-gray-200" style="width: 200px;">Pupil</th>
+                <th class="sticky left-0 z-30 px-3 py-2 text-xs font-semibold text-left text-gray-500 uppercase bg-gray-50 border-b border-gray-200" style="width: 200px;">Pupil<span class="block mt-0.5 text-[10px] font-medium normal-case text-gray-400 whitespace-nowrap">{{ $offering->grade->name ?? '' }} &middot; {{ $period['term']?->name }} &middot; {{ $period['month']['label'] ?? '' }}</span></th>
                 <th class="px-2 py-2 text-xs font-semibold text-center text-gray-500 uppercase border-b border-l border-gray-200" style="width: 60px;" title="The pupil's term total so far (saved marks, counting subjects)">Total</th>
                 @foreach ($subjects as $s)
                   @php
@@ -250,7 +250,7 @@
         <table class="min-w-full text-sm border-collapse">
           <thead class="sticky top-0 z-20 bg-gray-50">
             <tr class="bg-gray-50">
-              <th class="sticky left-0 z-30 px-3 py-2 text-xs font-semibold text-left text-gray-500 uppercase bg-gray-50 border-b border-gray-200">Pupil</th>
+              <th class="sticky left-0 z-30 px-3 py-2 text-xs font-semibold text-left text-gray-500 uppercase bg-gray-50 border-b border-gray-200">Pupil<span class="block mt-0.5 text-[10px] font-medium normal-case text-gray-400 whitespace-nowrap">{{ $offering->grade->name ?? '' }} &middot; {{ $period['term']?->name }} &middot; {{ $period['month']['label'] ?? '' }}</span></th>
               @foreach ($subjects as $s)
                 <th class="px-3 py-2 text-xs font-semibold text-center text-gray-600 border-b border-l border-gray-200" style="min-width: 148px;">{{ $s->name }}</th>
               @endforeach

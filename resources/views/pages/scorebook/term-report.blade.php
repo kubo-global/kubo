@@ -101,7 +101,7 @@
               {{-- Total/Ave/Pos sit next to the name: with a dozen subject columns
                    they would otherwise only be visible after scrolling all the way right. --}}
               <th class="px-2 py-2 border-b border-gray-200">No</th>
-              <th class="px-3 py-2 text-left border-b border-gray-200">Name</th>
+              <th class="px-3 py-2 text-left border-b border-gray-200">Name<span class="block mt-0.5 text-[10px] font-medium normal-case text-gray-400 whitespace-nowrap">{{ $offering->grade->name ?? '' }} &middot; {{ $period['term']?->name }} &middot; {{ $period['month']['label'] ?? '' }}</span></th>
               <th class="px-2 py-2 text-center border-b border-l border-gray-200">Total</th>
               <th class="px-2 py-2 text-center border-b border-gray-200">Ave</th>
               <th class="px-2 py-2 text-center border-b border-gray-200">Pos</th>
