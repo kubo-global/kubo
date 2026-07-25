@@ -138,23 +138,24 @@
                     $pinnedType = ($meta && ($meta['locked_type'] ?? false) && $meta['type'] !== ($period['typeName'] ?? null))
                         ? $meta['type'] : null;
                   @endphp
-                  <th class="px-3 py-2.5 text-xs font-semibold text-center border-b border-l border-gray-200 {{ $locked ? 'text-gray-400 bg-gray-100' : 'text-gray-600' }}" style="min-width: 148px;">
+                  <th class="px-3 py-2.5 text-xs font-semibold text-center border-b border-l border-gray-200 {{ $locked ? 'text-gray-400 bg-gray-100' : (! $meta ? 'text-gray-400' : 'text-gray-600') }}" style="min-width: 148px;">
                     {{ $s->name }}
                     @if (! $meta && ! $locked)
                       {{-- No assessment yet for this period: announce the default max, allow changing it before first save. --}}
-                      <span class="block text-[9px] font-normal normal-case text-gray-500" x-data="{ editMax: false }">
+                      <span class="block mt-0.5 text-[11px] font-normal normal-case text-gray-500 whitespace-nowrap" x-data="{ editMax: false }">
                         <template x-if="! editMax">
-                          <span>out of {{ $defaultMax }} &middot;
-                            <button type="button" @click="editMax = true" class="underline text-indigo-500 hover:text-indigo-700">change</button>
-                            <span class="ml-1 px-1 py-0.5 rounded bg-amber-50 text-amber-700 ring-1 ring-amber-200">not started</span>
+                          <span class="whitespace-nowrap">
+                            <span class="inline-block px-1.5 py-0.5 mr-1 rounded bg-gray-100 text-gray-500 ring-1 ring-gray-200 whitespace-nowrap">not started</span>
+                            out of {{ $defaultMax }}
+                            <button type="button" @click="editMax = true" class="ml-0.5 underline text-indigo-500 hover:text-indigo-700">change</button>
                           </span>
                         </template>
                         <template x-if="editMax">
                           <span>out of <input type="number" name="max[{{ $s->id }}]" value="{{ $defaultMax }}" min="1" max="100"
-                            class="w-12 px-1 py-0.5 text-center border border-gray-300 rounded"></span>
+                            class="w-14 px-1 py-0.5 text-center border border-gray-300 rounded"></span>
                         </template>
                       </span>
-                    @elseif ($colMax !== 100)<span class="block text-[9px] font-normal normal-case text-gray-500">out of {{ $colMax }}</span>@endif
+                    @elseif ($colMax !== 100)<span class="block mt-0.5 text-[11px] font-normal normal-case text-gray-500">out of {{ $colMax }}</span>@endif
                     @if ($pinnedType)<span class="block text-[9px] font-normal normal-case text-amber-600">saved as {{ $pinnedType }}</span>@endif
                     @if ($locked)<span class="block text-[9px] font-normal normal-case text-gray-400">view only</span>@endif
                   </th>
@@ -175,7 +176,7 @@
                       $val = is_numeric($entry) ? $entry : '';
                       $locked = $restricted && ! in_array($s->id, $editableSubjects);
                     @endphp
-                    <td class="px-3 py-3 border-l border-gray-100 {{ $locked ? 'bg-gray-50' : '' }}" x-data="{ absent: {{ $isAbsent ? 'true' : 'false' }} }">
+                    <td class="px-3 py-3 border-l border-gray-100 {{ $locked ? 'bg-gray-50' : (! isset($columnMeta[$s->id]) ? 'bg-gray-50/80' : '') }}" x-data="{ absent: {{ $isAbsent ? 'true' : 'false' }} }">
                       @if ($locked)
                         {{-- Not this teacher's subject: show the mark read-only, no inputs submitted. --}}
                         <div class="text-center text-gray-400">{{ $isAbsent ? 'abs' : ($val === '' ? '—' : $val) }}</div>
