@@ -151,7 +151,7 @@
               @foreach ($students as $i => $st)
                 <tr class="{{ $i % 2 ? 'bg-indigo-50/60' : 'bg-white' }}">
                   <td class="sticky left-0 z-10 px-3 py-2 font-medium text-gray-800 whitespace-nowrap {{ $i % 2 ? 'bg-indigo-50' : 'bg-white' }}">
-                    {{ $st->last_name }} {{ $st->first_name }}
+                    {{ $st->first_name }} {{ $st->last_name }}
                   </td>
                   <td class="px-2 py-2 text-center text-gray-500 border-l border-gray-100">{{ isset($termTotals[$st->id]) ? (int) round($termTotals[$st->id]['total']) : '—' }}</td>
                   @foreach ($subjects as $s)
@@ -230,7 +230,7 @@
             @foreach ($students as $i => $st)
               <tr class="{{ $i % 2 ? 'bg-indigo-50/60' : 'bg-white' }}">
                 <td class="sticky left-0 z-10 px-3 py-2 font-medium text-gray-800 whitespace-nowrap {{ $i % 2 ? 'bg-indigo-50' : 'bg-white' }}">
-                  {{ $st->last_name }} {{ $st->first_name }}
+                  {{ $st->first_name }} {{ $st->last_name }}
                 </td>
                 @foreach ($subjects as $s)
                   @php $v = $existing[$s->id][$st->id] ?? null; @endphp

@@ -101,7 +101,7 @@
           <tbody class="divide-y divide-gray-100">
             @foreach ($students as $student)
               <tr class="hover:bg-indigo-50/40">
-                <td class="sticky left-0 px-4 py-3 font-medium text-gray-900 bg-white whitespace-nowrap">{{ $student->last_name }} {{ $student->first_name }}</td>
+                <td class="sticky left-0 px-4 py-3 font-medium text-gray-900 bg-white whitespace-nowrap">{{ $student->first_name }} {{ $student->last_name }}</td>
                 @foreach ($assessments as $a)
                   @php $sc = $scores[$a->id.'_'.$student->id] ?? null; @endphp
                   <td class="px-4 py-3 text-right text-gray-700">

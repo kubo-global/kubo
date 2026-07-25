@@ -33,7 +33,7 @@
           <li>
             <a href="{{ $record($pupil) }}"
               class="flex items-center justify-between px-3 py-2 text-sm hover:bg-indigo-50">
-              <span class="font-medium text-gray-900">{{ $pupil->last_name }} {{ $pupil->first_name }}</span>
+              <span class="font-medium text-gray-900">{{ $pupil->first_name }} {{ $pupil->last_name }}</span>
               <span class="text-xs text-gray-500">{{ $pupil->grade_name ?? '—' }} · open health record &rarr;</span>
             </a>
           </li>
@@ -79,7 +79,7 @@
               {{ $row['type'] === 'wound' ? 'wound' : 'incident' }}
             </span>
             <a href="{{ $record($row['pupil']) }}" class="font-medium text-gray-900 hover:underline">
-              {{ $row['pupil']?->last_name }} {{ $row['pupil']?->first_name }}
+              {{ $row['pupil']?->first_name }} {{ $row['pupil']?->last_name }}
             </a>
             {{-- On a phone the complaint gets its own line instead of being cut to
                  "Fell dur…": the row wraps, so give it the full width. --}}
@@ -116,7 +116,7 @@
               {{ $row['type'] }}
             </span>
             <a href="{{ $record($row['pupil']) }}" class="font-medium text-gray-900 hover:underline">
-              {{ $row['pupil']?->last_name }} {{ $row['pupil']?->first_name }}
+              {{ $row['pupil']?->first_name }} {{ $row['pupil']?->last_name }}
             </a>
             <span class="flex-1 min-w-0 text-gray-700 truncate">{{ \Illuminate\Support\Str::limit($row['what'], 70) }}</span>
             <span class="text-xs text-gray-500 whitespace-nowrap">{{ $row['when']->format('d M Y') }}</span>
@@ -148,7 +148,7 @@
               <tr class="hover:bg-gray-50">
                 <td class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap">
                   <a href="{{ route('health.pupil', $r->user_id) }}" class="hover:underline">
-                    {{ $r->last_name }} {{ $r->first_name }}
+                    {{ $r->first_name }} {{ $r->last_name }}
                   </a>
                 </td>
                 <td class="px-4 py-3 text-gray-500">{{ $r->grade_name ?? '—' }}</td>
@@ -188,7 +188,7 @@
                   <a href="{{ route('health.incidents.edit', $i) }}" class="hover:underline">{{ $i->occurred_at?->format('d M Y, H:i') }}</a>
                 </td>
                 <td class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap">
-                  <a href="{{ $record($i->student) }}" class="hover:underline">{{ $i->student->last_name ?? '' }} {{ $i->student->first_name ?? '' }}</a>
+                  <a href="{{ $record($i->student) }}" class="hover:underline">{{ $i->student->first_name ?? '' }} {{ $i->student->last_name ?? '' }}</a>
                 </td>
                 <td class="px-4 py-3 text-gray-700">{{ \Illuminate\Support\Str::limit($i->complaint, 60) }}</td>
                 <td class="px-4 py-3 text-xs text-gray-600">{{ $i->actionLabel() ?: '—' }}</td>
@@ -230,7 +230,7 @@
             @foreach ($wounds as $case)
               <tr class="hover:bg-gray-50">
                 <td class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap">
-                  <a href="{{ $record($case->student) }}" class="hover:underline">{{ $case->student->last_name ?? '' }} {{ $case->student->first_name ?? '' }}</a>
+                  <a href="{{ $record($case->student) }}" class="hover:underline">{{ $case->student->first_name ?? '' }} {{ $case->student->last_name ?? '' }}</a>
                 </td>
                 <td class="px-4 py-3 text-gray-700">
                   <a href="{{ route('health.wound-cases.edit', $case) }}" class="hover:underline">{{ $case->diagnosis }}</a>

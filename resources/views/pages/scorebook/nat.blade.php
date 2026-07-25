@@ -65,7 +65,7 @@
             @foreach ($students as $student)
               @php $total = 0; @endphp
               <tr class="hover:bg-indigo-50/40">
-                <td class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap">{{ $student->last_name }} {{ $student->first_name }}</td>
+                <td class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap">{{ $student->first_name }} {{ $student->last_name }}</td>
                 @foreach ($assessments as $a)
                   @php $sc = $scores[$a->id.'_'.$student->id] ?? null; $v = ($sc && !$sc['absent']) ? $sc['score'] : null; $total += (int) $v; @endphp
                   <td class="px-4 py-3 text-right {{ $v !== null && $v >= 80 ? 'bg-green-100 text-green-800 font-semibold' : ($v !== null && $v < 40 ? 'bg-red-100 text-red-800 font-semibold' : 'text-gray-700') }}">

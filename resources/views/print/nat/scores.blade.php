@@ -22,7 +22,7 @@
         <tbody>
             @foreach ($rows as $r)
                 <tr class="{{ $loop->even ? 'zebra' : '' }}">
-                    <td>{{ $r['student']->last_name }} {{ $r['student']->first_name }}</td>
+                    <td>{{ $r['student']->first_name }} {{ $r['student']->last_name }}</td>
                     <td>{{ strtoupper($r['gender']) }}</td>
                     @foreach ($assessments as $a)
                         @php $val = $r['scores'][$a->id] ?? null; @endphp

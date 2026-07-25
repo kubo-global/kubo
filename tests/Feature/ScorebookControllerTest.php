@@ -78,7 +78,7 @@ class ScorebookControllerTest extends TestCase
             ->get(route('scorebook.class', $offering))
             ->assertOk()
             ->assertSee('English language')
-            ->assertSee('Dukureh Awa')
+            ->assertSee('Awa Dukureh')
             ->assertSee('test 1')
             ->assertSee('Tests/exams this term: 1'); // the tab count badge
     }
@@ -136,7 +136,7 @@ class ScorebookControllerTest extends TestCase
             ->assertOk()
             ->assertSee('National Assessment Test')
             ->assertSee('Integrated studies')
-            ->assertSee('Conteh Aisha')
+            ->assertSee('Aisha Conteh')
             // each subject is editable: its column links to the score-entry grid
             ->assertSee(route('reporting.assessment.scores', $nat), false)
             ->assertSee('enter or edit its scores');
