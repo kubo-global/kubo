@@ -28,6 +28,8 @@ underlying data, so it generates the documents:
 | **Term report** | Per-pupil PDF: weighted test/exam totals per subject, grade + remark from the rubric, position, average, class size, and the typed conduct/general remarks. Per-school card layouts (`term_card_layout`) | Reports / Prepare reports |
 | **Report Book** | Booklet-style annual grid (months × subjects), printable filled **or blank**, per pupil or whole class | Reports / Positions |
 | **Internal Assessment Result Sheet** | The class master list: pupils × subjects with Total, Average % and Position for a term | Positions |
+| **Result analysis** | Per-sex fail/pass/mastery counts and percentages per subject for a period or the whole term | Results / By term |
+| **Result histogram** | The analysis as bar charts, printable filled or blank to colour in | Results / By term |
 | **Students Daily Attendance** | Monthly summary: boys/girls present/absent per day, weekly + monthly totals | Attendance register |
 | **NAT scores listing** | Official candidate sheet with mastery/fail shading (absentees optionally hidden) | NAT screen |
 | **NAT analysis** | Per-sex fail/pass/mastery counts, percentages and averages per subject, with bar charts | NAT screen |
@@ -45,9 +47,12 @@ on-device with DomPDF — no internet involved.
 - **Two login flows** — staff log in with a type-to-search account picker (scales to large
   staff lists) + password; students use a passwordless **grade → class → name** picker (the
   class step only appears when a grade runs multiple classes).
-- **Scorebook** — click-through score entry (class → subject → assessment) per term. Every
-  pupil gets a score *or* an explicit absent mark. Assessment types (Test, Exam, …) carry
-  configurable default max scores and weights. See [docs/scorebook-redesign.md](docs/scorebook-redesign.md).
+- **Scorebook** — score entry per class and term, in the school's own rhythm: **months
+  mode** (public schools: each calendar month is a Test or Exam out of 100) or **tests
+  mode** (Test 1, Test 2 and the Exam per term, on fixed scales — tests out of 25, the
+  exam out of 75). One grid per period with a pinned header and autosave moments after
+  each change; every pupil gets a score *or* an explicit absent mark, and untouched
+  subjects are visibly "not started". See [docs/scorebook-redesign.md](docs/scorebook-redesign.md).
 - **Class positions** — pupils ranked by term total (ties share a place); the same total
   drives the report's Position column. Subjects can be flagged **"does not count toward
   total"** so Arts or P.E. stay on the report without affecting the ranking. See
@@ -55,7 +60,9 @@ on-device with DomPDF — no internet involved.
 - **Prepare reports** — the report-time screen: pupils listed in rank order, and per pupil
   staff type the conduct and general remark (autosaved), which then print on the card
   instead of a hand-written blank. Warns when a subject has marks in one column but not
-  the other, so nothing silently drops off the report.
+  the other, and offers to convert empty cells in started assessments into proper
+  absences in one click — an empty cell is skipped in the average while absent counts
+  as 0, so forgotten gaps would otherwise quietly flatter the report.
 - **Attendance** — a daily per-class register (present / absent / late / excused). Year
   totals roll up into the Report Book's *Time present / Time absent* fields; months roll up
   into the ministry summary above.
