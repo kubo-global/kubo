@@ -184,9 +184,25 @@ class TermResultController extends Controller
             }
 
             // Marks must fit the column's own maximum (a wizard-made test can be out
-            // of 25, not 100). Reject the whole column rather than record 80/25.
-            $max = (int) ($existing->max_score
-                ?? ((int) $request->input("max.{$subject->id}") ?: $this->defaultMaxFor($period)));
+            // of 25, not 100). A teacher may change the max — also on an existing
+            // column, e.g. when the paper test turns out to be out of 50 — but
+            // never below a score that is already recorded, since every stored
+            // mark is read against this scale.
+            $requestedMax = (int) $request->input("max.{$subject->id}") ?: null;
+            if ($existing) {
+                $max = (int) $existing->max_score;
+                if ($requestedMax && $requestedMax !== $max) {
+                    $highest = (int) $existing->scores()->max('score');
+                    if ($requestedMax < $highest) {
+                        $skipped[] = "{$subject->name} (max {$requestedMax} is below an entered mark of {$highest})";
+                        continue;
+                    }
+                    $existing->update(['max_score' => $requestedMax]);
+                    $max = $requestedMax;
+                }
+            } else {
+                $max = $requestedMax ?: $this->defaultMaxFor($period);
+            }
             $over = collect($column)->filter(fn ($v) => $v !== null && $v !== '' && (float) $v > $max);
             if ($over->isNotEmpty()) {
                 $skipped[] = "{$subject->name} (marks above its maximum of {$max})";

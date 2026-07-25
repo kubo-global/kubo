@@ -156,6 +156,18 @@
                             class="w-14 px-1 py-0.5 text-center border border-gray-300 rounded"></span>
                         </template>
                       </span>
+                    @elseif (! $locked)
+                      <span class="block mt-0.5 text-[11px] font-normal normal-case text-gray-500" x-data="{ editMax: false }">
+                        <template x-if="! editMax">
+                          <span class="inline-block whitespace-nowrap">out of {{ $colMax }}
+                            <button type="button" @click="editMax = true" class="ml-0.5 underline text-indigo-400 hover:text-indigo-600">change</button>
+                          </span>
+                        </template>
+                        <template x-if="editMax">
+                          <span>out of <input type="number" name="max[{{ $s->id }}]" value="{{ $colMax }}" min="1" max="100"
+                            class="w-14 px-1 py-0.5 text-center border border-gray-300 rounded"></span>
+                        </template>
+                      </span>
                     @elseif ($colMax !== 100)<span class="block mt-0.5 text-[11px] font-normal normal-case text-gray-500">out of {{ $colMax }}</span>@endif
                     @if ($pinnedType)<span class="block text-[9px] font-normal normal-case text-amber-600">saved as {{ $pinnedType }}</span>@endif
                     @if ($locked)<span class="block text-[9px] font-normal normal-case text-gray-400">view only</span>@endif
