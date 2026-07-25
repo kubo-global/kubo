@@ -121,7 +121,7 @@
           @endif
         </div>
 
-        <div class="overflow-auto max-h-[calc(100vh_-_19rem)] min-h-[24rem] bg-white border border-gray-200 rounded-lg shadow-sm">
+        <div class="w-fit min-w-full bg-white border border-gray-200 rounded-lg shadow-sm">
           <table class="text-sm border-collapse table-fixed" style="width: 100%; min-width: {{ 200 + $subjects->count() * 120 }}px;">
             <thead class="sticky top-0 z-20 bg-gray-50">
               <tr class="bg-gray-50">
@@ -217,7 +217,7 @@
         </div>
       </div>
 
-      <div class="overflow-auto max-h-[calc(100vh_-_19rem)] min-h-[24rem] bg-white border border-gray-200 rounded-lg shadow-sm">
+      <div class="w-fit min-w-full bg-white border border-gray-200 rounded-lg shadow-sm">
         <table class="min-w-full text-sm border-collapse">
           <thead class="sticky top-0 z-20 bg-gray-50">
             <tr class="bg-gray-50">
