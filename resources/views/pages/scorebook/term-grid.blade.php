@@ -260,9 +260,10 @@
           </table>
         </div>
 
-        {{-- Floating action pill: pinned to the bottom-left of the viewport in both
-             scroll directions, sized to its content instead of the (wide) table. --}}
-        <div class="sticky bottom-3 left-3 z-30 inline-flex items-center gap-4 px-4 py-2.5 mt-4 w-fit bg-white/95 backdrop-blur rounded-xl shadow-lg ring-1 ring-gray-200">
+        {{-- Floating action pill: fixed to the bottom-right of the viewport, always
+             in reach; the spacer keeps it clear of the table's last rows. --}}
+        <div class="h-20"></div>
+        <div class="fixed bottom-4 right-4 z-40 inline-flex items-center gap-4 px-4 py-2.5 bg-white/95 backdrop-blur rounded-xl shadow-lg ring-1 ring-gray-200">
           <span class="text-sm text-gray-500" aria-live="polite">
             <span x-show="saving">Saving&hellip;</span>
             <span x-show="! saving && savedAt" x-cloak>Saved &check; <span x-text="savedAt"></span></span>
