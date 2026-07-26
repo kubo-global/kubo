@@ -262,7 +262,6 @@
 
         {{-- Sticky action bar: Save stays in view however far the grid is scrolled. --}}
         <div class="sticky bottom-0 z-30 flex flex-wrap items-center justify-between gap-3 px-4 py-3 mt-4 -mx-1 bg-white/95 backdrop-blur border-t border-gray-200 rounded-t-lg shadow-[0_-4px_12px_rgba(0,0,0,0.06)]">
-          <a href="{{ route('term-grid.report', $pp) }}" class="text-sm font-medium text-gray-500 hover:text-gray-800">&larr; Back to results</a>
           <span class="text-sm text-gray-500" aria-live="polite">
             <span x-show="saving">Saving&hellip;</span>
             <span x-show="! saving && savedAt" x-cloak>Saved &check; <span x-text="savedAt"></span></span>
