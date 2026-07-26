@@ -263,13 +263,14 @@
         {{-- Floating action pill: fixed to the bottom-right of the viewport, always
              in reach; the spacer keeps it clear of the table's last rows. --}}
         <div class="h-20"></div>
-        <div class="fixed bottom-4 right-4 z-40 inline-flex items-center gap-4 px-4 py-2.5 bg-white/95 backdrop-blur rounded-xl shadow-lg ring-1 ring-gray-200">
-          <span class="text-sm text-gray-500" aria-live="polite">
+        <div class="fixed bottom-4 right-4 z-40 inline-flex items-center gap-3">
+          <span class="text-sm text-gray-600 px-3 py-1.5 rounded-lg bg-white/95 backdrop-blur shadow ring-1 ring-gray-200" aria-live="polite"
+            x-show="saving || savedAt" x-cloak>
             <span x-show="saving">Saving&hellip;</span>
-            <span x-show="! saving && savedAt" x-cloak>Saved &check; <span x-text="savedAt"></span></span>
+            <span x-show="! saving && savedAt">Saved &check; <span x-text="savedAt"></span></span>
           </span>
           <button type="submit" title="Marks save automatically as you type; Done checks for warnings and returns to the results."
-            class="px-5 py-2.5 text-sm font-semibold text-white rounded-lg bg-indigo-600 hover:bg-indigo-700">Done</button>
+            class="px-5 py-2.5 text-sm font-semibold text-white rounded-lg bg-indigo-600 hover:bg-indigo-700 shadow-lg">Done</button>
         </div>
       </form>
     @else
