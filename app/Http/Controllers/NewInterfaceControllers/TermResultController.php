@@ -238,9 +238,11 @@ class TermResultController extends Controller
 
         $redirect = redirect()->route('term-grid.report', $this->periodParams($offering, $period));
 
+        // No success toast: the grid autosaves and shows its own Saved indicator,
+        // so Done should feel like closing a notebook, not saving one.
         return $skipped
             ? $redirect->with('error', 'Not saved for: '.implode('; ', $skipped).'. The other columns were saved.')
-            : $redirect->with('success', 'Marks saved.');
+            : $redirect;
     }
 
     // ---- PDFs ---------------------------------------------------------------
