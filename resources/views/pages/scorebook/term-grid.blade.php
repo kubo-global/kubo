@@ -100,7 +100,7 @@
             let r = parseInt(el.dataset.r) + step[0], c = parseInt(el.dataset.c) + step[1];
             // skip gaps (locked/graded cells have no input) up to the grid edge
             for (let i = 0; i < 40; i++) {
-              const next = this.$el.querySelector(`input[data-r="${r}"][data-c="${c}"]`);
+              const next = this.$el.querySelector(`input[data-r='${r}'][data-c='${c}']`);
               if (next) { next.focus(); next.select(); return; }
               r += step[0]; c += step[1];
               if (r < 0 || c < 0) return;
