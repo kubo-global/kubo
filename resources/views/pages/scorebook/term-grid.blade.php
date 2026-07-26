@@ -260,8 +260,9 @@
           </table>
         </div>
 
-        {{-- Sticky action bar: Save stays in view however far the grid is scrolled. --}}
-        <div class="sticky bottom-0 z-30 flex flex-wrap items-center justify-between gap-3 px-4 py-3 mt-4 -mx-1 bg-white/95 backdrop-blur border-t border-gray-200 rounded-t-lg shadow-[0_-4px_12px_rgba(0,0,0,0.06)]">
+        {{-- Floating action pill: pinned to the bottom-left of the viewport in both
+             scroll directions, sized to its content instead of the (wide) table. --}}
+        <div class="sticky bottom-3 left-3 z-30 inline-flex items-center gap-4 px-4 py-2.5 mt-4 w-fit bg-white/95 backdrop-blur rounded-xl shadow-lg ring-1 ring-gray-200">
           <span class="text-sm text-gray-500" aria-live="polite">
             <span x-show="saving">Saving&hellip;</span>
             <span x-show="! saving && savedAt" x-cloak>Saved &check; <span x-text="savedAt"></span></span>
