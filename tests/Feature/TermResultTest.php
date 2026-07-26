@@ -61,7 +61,7 @@ class TermResultTest extends TestCase
         $this->actingAs($this->head)->get(route('term-grid.edit', $this->params(['edit' => 1])))
             ->assertOk()
             ->assertSee('name="scores', false)
-            ->assertSee('Save marks');
+            ->assertSee('Done');
     }
 
     #[Test]

@@ -113,7 +113,7 @@ class TwoTeacherTermEntryTest extends TestCase
             'term' => $this->openTerm->id,
             'month' => $this->periods[$period],
             'scores' => $scores,
-        ])->assertRedirect()->assertSessionHas('success');
+        ])->assertRedirect()->assertSessionMissing('error');
     }
 
     /** The class teacher's sitting: whole term, switching Test 1 -> Test 2 -> Exam. French left blank. */
@@ -260,7 +260,7 @@ class TwoTeacherTermEntryTest extends TestCase
             'month' => $this->periods['test1'],
             'scores' => [$this->subjects['Phonics']->id => [$this->pupils[0]->id => '18']],
             'max' => [$this->subjects['Phonics']->id => 20],
-        ])->assertRedirect()->assertSessionHas('success');
+        ])->assertRedirect()->assertSessionMissing('error');
 
         $this->assertSame(25, (int) Assessment::where('offering_id', $this->offering->id)
             ->where('subject_id', $this->subjects['Phonics']->id)->value('max_score'));

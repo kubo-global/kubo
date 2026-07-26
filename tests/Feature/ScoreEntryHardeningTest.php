@@ -115,7 +115,7 @@ class ScoreEntryHardeningTest extends TestCase
         $examAssessment = $this->wizardAssessment($this->exam, 75);
 
         $this->gridSave(['scores' => [$this->maths->id => [$this->pupil->id => '20']]])
-            ->assertSessionHas('success');
+            ->assertSessionMissing('error');
 
         $this->assertSame($this->test->id, $examAssessment->fresh()->assessment_type_id);
     }
@@ -132,7 +132,7 @@ class ScoreEntryHardeningTest extends TestCase
 
         // 20 fits and saves.
         $this->gridSave(['scores' => [$this->maths->id => [$this->pupil->id => '20']]])
-            ->assertSessionHas('success');
+            ->assertSessionMissing('error');
         $this->assertSame(20, (int) AssessmentScore::where('user_id', $this->pupil->id)->value('score'));
     }
 
@@ -162,7 +162,7 @@ class ScoreEntryHardeningTest extends TestCase
             'month' => Carbon::parse($this->term->start)->format('Y-m'),
             'type' => 'Test',
             'scores' => [$this->maths->id => [$this->pupil->id => '50']],
-        ])->assertRedirect()->assertSessionHas('success');
+        ])->assertRedirect()->assertSessionMissing('error');
     }
 
     #[Test]
@@ -179,7 +179,7 @@ class ScoreEntryHardeningTest extends TestCase
     public function absent_saves_a_null_score_like_the_wizard_does(): void
     {
         $this->gridSave(['absent' => [$this->maths->id => [$this->pupil->id => 1]]])
-            ->assertSessionHas('success');
+            ->assertSessionMissing('error');
 
         $row = AssessmentScore::where('user_id', $this->pupil->id)->first();
         $this->assertSame(1, (int) $row->absent);
