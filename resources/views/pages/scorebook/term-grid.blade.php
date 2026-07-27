@@ -101,7 +101,7 @@
             // skip gaps (locked/graded cells have no input) up to the grid edge
             for (let i = 0; i < 40; i++) {
               const next = this.$el.querySelector(`input[data-r='${r}'][data-c='${c}']`);
-              if (next) { next.focus(); next.select(); return; }
+              if (next) { next.focus(); next.select(); next.scrollIntoView({ block: 'nearest' }); return; }
               r += step[0]; c += step[1];
               if (r < 0 || c < 0) return;
             }
@@ -245,7 +245,7 @@
                           data-r="{{ $i }}" data-c="{{ $loop->index }}" @focus="$event.target.select()"
                           x-bind:disabled="absent" :class="absent && 'opacity-40 bg-gray-100'"
                           aria-label="{{ $st->first_name }} {{ $st->last_name }} — {{ $s->name }}"
-                          class="w-16 px-2 py-2.5 sm:py-1.5 text-center text-gray-900 border rounded-md focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 {{ ! isset($columnMeta[$s->id]) ? 'border-dashed border-gray-400 bg-white/60' : 'border-gray-300' }}">
+                          class="w-16 px-2 py-2.5 sm:py-1.5 text-center text-gray-900 border rounded-md scroll-mt-24 scroll-mb-24 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 {{ ! isset($columnMeta[$s->id]) ? 'border-dashed border-gray-400 bg-white/60' : 'border-gray-300' }}">
                         <input type="hidden" name="absent[{{ $s->id }}][{{ $st->id }}]" :value="absent ? 1 : 0">
                         <button type="button" @click="absent = !absent; $dispatch('input')" title="Mark {{ $st->first_name }} absent for {{ $s->name }}"
                           :class="absent ? 'bg-gray-400 text-white' : 'text-gray-400 hover:bg-gray-100 ring-1 ring-gray-200'"
