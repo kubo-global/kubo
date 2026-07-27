@@ -12,6 +12,7 @@ use App\Models\Offering;
 use App\Models\School;
 use App\Models\Student;
 use App\Models\Subject;
+use App\Domain\Reporting\Services\PositionService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
@@ -86,5 +87,27 @@ class ScorebookByTermTest extends TestCase
 
         $response->assertOk();
         $this->assertStringStartsWith('%PDF', $response->getContent());
+    }
+
+    #[Test]
+    public function a_pupil_with_no_marks_does_not_sit_and_is_left_out_of_the_ranking_and_count(): void
+    {
+        ['offering' => $offering, 'school' => $school] = $this->scoredClass();
+
+        // A third pupil, enrolled but never assessed.
+        $ghost = Student::factory()->create(['first_name' => 'Ghost', 'last_name' => 'Pupil']);
+        Enrollment::factory()->create(['user_id' => $ghost->id, 'offering_id' => $offering->id]);
+
+        $ranked = (new PositionService())->rank($offering, $this->term, $school);
+
+        // Only the two who sat are ranked; the ghost is neither counted nor ranked.
+        $this->assertSame(2, $ranked->count());
+        $this->assertNull($ranked->firstWhere('student_id', $ghost->id));
+
+        // And they get no report card / no row in the by-term view.
+        $this->actingAs($this->headmaster)
+            ->get(route('term-grid.overview', ['offering' => $offering, 'term' => $this->term->id]))
+            ->assertOk()
+            ->assertDontSee('Ghost Pupil');
     }
 }

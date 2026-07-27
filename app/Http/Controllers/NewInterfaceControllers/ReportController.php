@@ -269,7 +269,8 @@ class ReportController extends Controller
         $enrollments = (new Offering())->enrolledFor($schoolyearId, $gradeId);
         $classTermReport = new ClassTermReportRepository($enrollments, $term, $school);
 
-        $reports = $reportService->generateClassReportPdf($classTermReport);
+        $reports = $reportService->generateClassReportPdf($classTermReport)
+            ->filter(fn ($r) => $r['sat'] ?? true)->values();   // skip did-not-sit pupils
 
         $view = $this->termCardView();
         $extra = $view === 'print.termReport-swallow'

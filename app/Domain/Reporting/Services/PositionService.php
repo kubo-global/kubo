@@ -32,6 +32,7 @@ class PositionService
             ->select('enrollments.*')->with('student')->get();
 
         $sorted = (new ClassTermReportRepository($enrollments, $term, $school))->getReports()
+            ->filter(fn ($r) => $r['sat'] ?? true)   // a pupil who did not sit is not ranked or counted
             ->sortByDesc(fn ($r) => $r['results']['total'])->values();
 
         $position = 0; $rank = 0; $prev = null;

@@ -36,13 +36,23 @@ class NewTermReportRepository
 
     public function getReportData()
     {
+        $results = $this->getTermResults();
+
+        // "Sat this term": the pupil has a real mark in at least one subject.
+        // A pupil enrolled but with no marks anywhere (left mid-year, never
+        // assessed) did not sit — they are dropped from the class ranking and
+        // the "No. in class" count, and get no card, so they neither inflate
+        // the denominator nor receive an all-blank report.
+        $sat = collect($results['subjectResults'])->contains(fn ($sr) => ($sr['hasAnyMark'] ?? false) === true);
+
         return collect([
             'student' => $this->student,
             'schoolyear' => $this->enrollment->offering->schoolyear,
             'term' => $this->term,
             'grade' => $this->enrollment->offering->grade,
             'teacher' => $this->enrollment->offering->principal->first(),
-            'results' => $this->getTermResults(),
+            'results' => $results,
+            'sat' => $sat,
         ]);
     }
 
@@ -115,7 +125,11 @@ class NewTermReportRepository
         return collect([
             'typeResults' => $typeResults,
             'subjectTotal' => $subjectTotal,
+            // hasScores needs every weighted type present (a full term mark);
+            // hasAnyMark is looser — at least one type has a real mark — and is
+            // what tells us the pupil sat (they may have a Test but no Exam yet).
             'hasScores' => $subjectTotal !== null,
+            'hasAnyMark' => collect($weightedScores)->contains(fn ($s) => $s !== null),
         ]);
     }
 
