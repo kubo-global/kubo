@@ -20,11 +20,21 @@ class AssessmentRepository
 
         $average = $this->calculateAverageFor($assessmentsWithScores);
 
+        // A "real mark": a score that was actually entered (not absent, not blank).
+        // Read off the loaded model so it is null-safe on legacy schemas that
+        // predate the `absent` column (there, any score row is a real mark).
+        $hasRealMark = $assessmentsWithScores->contains(function ($a) {
+            $s = $a->scores->first();
+
+            return $s && $s['score'] !== null && ! ($s->absent ?? false);
+        });
+
         return [
             'assessments' => $assessmentsWithScores,
             // Match old behavior: return 0 instead of null when no scores exist
             'average' => round($average ?? 0),
             'weightedScore' => $this->calculateWeightedScore($average),
+            'hasRealMark' => $hasRealMark,
         ];
     }
 

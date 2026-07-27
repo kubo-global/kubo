@@ -92,17 +92,24 @@ class ScorebookByTermTest extends TestCase
     #[Test]
     public function a_pupil_with_no_marks_does_not_sit_and_is_left_out_of_the_ranking_and_count(): void
     {
-        ['offering' => $offering, 'school' => $school] = $this->scoredClass();
+        ['offering' => $offering, 'school' => $school, 'maths' => $maths] = $this->scoredClass();
 
-        // A third pupil, enrolled but never assessed.
+        // Two more pupils who did not sit: one never assessed, one marked absent
+        // for everything (absent counts as 0 in the average, but is not sitting).
         $ghost = Student::factory()->create(['first_name' => 'Ghost', 'last_name' => 'Pupil']);
         Enrollment::factory()->create(['user_id' => $ghost->id, 'offering_id' => $offering->id]);
 
+        $absentee = Student::factory()->create(['first_name' => 'Allabsent', 'last_name' => 'Pupil']);
+        Enrollment::factory()->create(['user_id' => $absentee->id, 'offering_id' => $offering->id]);
+        $mathsTest = Assessment::where('offering_id', $offering->id)->where('subject_id', $maths->id)->firstOrFail();
+        AssessmentScore::factory()->create(['user_id' => $absentee->id, 'assessment_id' => $mathsTest->id, 'score' => null, 'absent' => true]);
+
         $ranked = (new PositionService())->rank($offering, $this->term, $school);
 
-        // Only the two who sat are ranked; the ghost is neither counted nor ranked.
+        // Only the two who sat are ranked; neither non-sitter is counted or ranked.
         $this->assertSame(2, $ranked->count());
         $this->assertNull($ranked->firstWhere('student_id', $ghost->id));
+        $this->assertNull($ranked->firstWhere('student_id', $absentee->id));
 
         // And they get no report card / no row in the by-term view.
         $this->actingAs($this->headmaster)
