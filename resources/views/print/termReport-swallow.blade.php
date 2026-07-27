@@ -94,6 +94,10 @@
         $i = array_search($name, $subjectOrder, true);
         return sprintf('%03d-%s', $i === false ? count($subjectOrder) + 1 : $i, $name);
     };
+
+    // Subjects the school does not report on the card (kept in the scorebook, just
+    // not printed here).
+    $hiddenSubjects = ['Reading'];
 @endphp
 @foreach ($reports as $report)
     @php
@@ -155,7 +159,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach (collect($report['results']['subjectResults'])->sortBy(fn ($r, $name) => $subjectRank($name)) as $subject => $result)
+                    @foreach (collect($report['results']['subjectResults'])->except($hiddenSubjects)->sortBy(fn ($r, $name) => $subjectRank($name)) as $subject => $result)
                         @php
                             $total = $result['subjectTotal'];
                             $band = ($total !== null) ? \App\Models\GradingScale::resolve($school, (float) $total, $gradeNum) : null;
