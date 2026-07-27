@@ -81,12 +81,13 @@
     $assessmentTypes = $school ? $school->assessmentTypes->where('weight', '>', 0)->sortBy('weight')->values() : collect();
 
     // The school's pre-printed form lists subjects in a fixed order; the card
-    // follows it so staff can lay them side by side. Subjects not on that form
-    // (e.g. the lower grades' Integrated studies/Phonics/Reading) follow after,
-    // alphabetically.
+    // follows it so staff can lay them side by side. The lower grades' Integrated
+    // studies sits in the Science/S.E.S. slot (it is their equivalent), and
+    // Phonics among the marked subjects, so every grade orders the same way.
+    // Only Reading is off the form and follows after, alphabetically.
     $subjectOrder = [
-        'Religious Knowledge', 'Verbal aptitude', 'Science', 'French', 'S.E.S.',
-        'Physical Education', 'Spelling/Dictation', 'English language', 'Mathematics',
+        'Religious Knowledge', 'Verbal aptitude', 'Science', 'Integrated studies', 'French', 'S.E.S.',
+        'Physical Education', 'Phonics', 'Spelling/Dictation', 'English language', 'Mathematics',
         'Art and craft', 'Health', 'Quantitative', 'Information Technology',
     ];
     $subjectRank = function ($name) use ($subjectOrder) {
