@@ -120,29 +120,33 @@
                 <x-header :title='$title' :heading='$heading' />
                 @endauth
 
-                @if ($errors->any())
-                <x-error class='mb-8'>
-
+                {{-- Flash region: aligned with the page content's horizontal padding
+                     (not edge-to-edge) and only rendered when there is something to
+                     show, so it doesn't sit as a detached full-width band. --}}
+                @if ($errors->any() || session('success') || session('error') || session('warning'))
+                <div class="px-4 pt-6 sm:px-6 lg:px-8">
                     @if ($errors->any())
-                    <ul>
-                        @foreach ($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                        @endforeach
-                    </ul>
+                    <x-error class='mb-4'>
+                        <ul>
+                            @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </x-error>
                     @endif
-                </x-error>
-                @endif
 
-                @if ($message = Session::get('success'))
-                <x-success class='mb-8'>{{ $message }}</x-success>
-                @endif
+                    @if ($message = Session::get('success'))
+                    <x-success class='mb-4'>{{ $message }}</x-success>
+                    @endif
 
-                @if ($message = Session::get('error'))
-                <x-error class='mb-8'>{{ $message }}</x-error>
-                @endif
+                    @if ($message = Session::get('error'))
+                    <x-error class='mb-4'>{{ $message }}</x-error>
+                    @endif
 
-                @if ($message = Session::get('warning'))
-                <div class="mb-8 rounded-md border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-800" role="alert">{{ $message }}</div>
+                    @if ($message = Session::get('warning'))
+                    <div class="mb-4 rounded-md border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-800" role="alert">{{ $message }}</div>
+                    @endif
+                </div>
                 @endif
 
                 @if ($wrap)
