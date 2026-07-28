@@ -573,6 +573,46 @@
   <div x-show="tab === '#grading'" x-cloak>
 
     <section class="mb-10">
+      <h2 class="mb-1 text-sm font-semibold tracking-wider text-gray-500 uppercase">Terms</h2>
+      <p class="mb-4 text-sm text-gray-500">A closed term is locked: teachers can no longer change its marks (you and the admin still can, to make corrections). Close a term once its report cards are done; a term also locks itself automatically once its end date has passed.</p>
+      <div class="space-y-2">
+        @foreach ($terms as $term)
+          @php $manual = $term->isManuallyLocked(); $ended = $term->isPastEnd(); $locked = $term->isLocked(); @endphp
+          <div class="flex flex-wrap items-center justify-between gap-3 p-4 bg-white border border-gray-200 rounded-lg">
+            <div>
+              <p class="text-sm font-medium text-gray-900">
+                {{ $term->name }}
+                @if ($locked)
+                  <span class="ml-2 px-2 py-0.5 text-xs font-semibold rounded-full bg-gray-200 text-gray-700">Closed</span>
+                @else
+                  <span class="ml-2 px-2 py-0.5 text-xs font-semibold rounded-full bg-green-100 text-green-800">Open</span>
+                @endif
+              </p>
+              <p class="text-xs text-gray-500">
+                {{ \Illuminate\Support\Carbon::parse($term->start)->format('d M Y') }} &ndash; {{ \Illuminate\Support\Carbon::parse($term->end)->format('d M Y') }}
+                @if ($manual) &middot; closed by staff @elseif ($ended) &middot; term has ended @endif
+              </p>
+            </div>
+            @if ($manual)
+              <form method="POST" action="{{ route('settings.toggle-term-lock', $term) }}">
+                @csrf
+                <button type="submit" class="px-4 py-2 text-sm font-medium rounded-md text-indigo-700 bg-white ring-1 ring-indigo-200 hover:bg-indigo-50">Reopen term</button>
+              </form>
+            @elseif (! $ended)
+              <form method="POST" action="{{ route('settings.toggle-term-lock', $term) }}"
+                onsubmit="return confirm('Close {{ $term->name }}? Teachers will no longer be able to change its marks.')">
+                @csrf
+                <button type="submit" class="px-4 py-2 text-sm font-medium text-white rounded-md bg-gray-800 hover:bg-gray-900">Close term</button>
+              </form>
+            @else
+              <span class="text-xs text-gray-400">locked automatically</span>
+            @endif
+          </div>
+        @endforeach
+      </div>
+    </section>
+
+    <section class="mb-10">
       <h2 class="text-sm font-semibold uppercase tracking-wider text-gray-500 mb-1">Report type</h2>
       <p class="mb-3 text-xs text-gray-500">Choose how reports are produced for this school.</p>
       <form method="POST" action="{{ route('settings.update-report-type') }}" class="flex items-center gap-2">

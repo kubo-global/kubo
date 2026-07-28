@@ -236,6 +236,20 @@ class SettingsController extends Controller
         return $this->backToTab('grading')->with('success', 'Term card layout set to: '.$validated['term_card_layout'].'.');
     }
 
+    /**
+     * Manually close (lock) or reopen a term. A closed term blocks teacher score
+     * edits everywhere via Term::isLocked(); headmaster/admin can still correct.
+     * Guarded by the manage-settings permission (headmaster + admin).
+     */
+    public function toggleTermLock(Term $term)
+    {
+        $term->update(['locked_at' => $term->locked_at ? null : now()]);
+
+        return back()->with('success', $term->locked_at
+            ? "{$term->name} is closed. Teachers can no longer change its marks."
+            : "{$term->name} is reopened.");
+    }
+
     public function updateReportType(Request $request)
     {
         $validated = $request->validate(['report_type' => 'required|in:term,book']);

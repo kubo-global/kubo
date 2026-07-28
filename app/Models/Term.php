@@ -12,7 +12,7 @@ class Term extends Model
     use HasFactory;
 
     public $timestamps =false;
-    protected $casts=['start' => 'datetime','end' => 'datetime'];
+    protected $casts=['start' => 'datetime','end' => 'datetime','locked_at' => 'datetime'];
         
     public static function current() : ?Term
     {
@@ -22,13 +22,26 @@ class Term extends Model
     }
 
     /**
-     * A term is "locked" once its end date has passed. Score entry for a
+     * A term is "locked" — no teacher score edits — when it has been manually
+     * closed (locked_at set) OR its end date has passed. Score entry for a
      * locked term is restricted to headmaster/admin so a regular teacher
      * can't quietly fudge old scores after report cards have gone out.
      */
     public function isLocked(): bool
     {
-        return $this->end && Carbon::now()->isAfter($this->end);
+        return $this->locked_at !== null || ($this->end && Carbon::now()->isAfter($this->end));
+    }
+
+    /** Manually closed by staff (as opposed to auto-locked by its end date). */
+    public function isManuallyLocked(): bool
+    {
+        return $this->locked_at !== null;
+    }
+
+    /** Auto-locked because its end date has passed. */
+    public function isPastEnd(): bool
+    {
+        return (bool) ($this->end && Carbon::now()->isAfter($this->end));
     }
 
     public function schoolyear() : BelongsTo
