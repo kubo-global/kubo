@@ -98,10 +98,11 @@
             if (! step) return;
             e.preventDefault();
             let r = parseInt(el.dataset.r) + step[0], c = parseInt(el.dataset.c) + step[1];
-            // skip gaps (locked/graded cells have no input) up to the grid edge
+            // skip gaps: locked/graded cells (no input) and absent cells (disabled
+            // input, cannot be typed into) are stepped over, up to the grid edge.
             for (let i = 0; i < 40; i++) {
               const next = this.$el.querySelector(`input[data-r='${r}'][data-c='${c}']`);
-              if (next) { next.focus(); next.select(); next.scrollIntoView({ block: 'nearest' }); return; }
+              if (next && ! next.disabled) { next.focus(); next.select(); next.scrollIntoView({ block: 'nearest' }); return; }
               r += step[0]; c += step[1];
               if (r < 0 || c < 0) return;
             }

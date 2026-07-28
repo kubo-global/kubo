@@ -38,13 +38,11 @@ class NewTermReportRepository
     {
         $results = $this->getTermResults();
 
-        // "Sat this term": the pupil has at least one real, non-absent mark in
-        // any subject. Enrolled but never assessed — or marked absent for
-        // everything — means they did not sit: dropped from the class ranking
-        // and the "No. in class" count, and given no card, so they neither
-        // inflate the denominator nor receive an all-blank report. (Absent
-        // counts as 0 in the average, so it must NOT qualify as sitting here.)
-        $sat = collect($results['subjectResults'])->contains(fn ($sr) => ($sr['hasRealMark'] ?? false) === true);
+        // "Sat this term" (computed in getTermResults over counting subjects):
+        // a pupil enrolled but never assessed, marked absent for everything, or
+        // with marks only in a non-counting subject did not sit — dropped from
+        // the class ranking and the "No. in class" count, and given no card.
+        $sat = $results['sat'] ?? false;
 
         return collect([
             'student' => $this->student,
@@ -83,6 +81,10 @@ class NewTermReportRepository
             'subjectResults' => $subjectResults,
             'total' => $reportTotal,
             'average' => round($this->calculateTermAverage($countingResults)),
+            // Sat the term: a real, non-absent mark in a subject that counts
+            // toward the total. Marks only in a non-counting subject (e.g. Art)
+            // leave the term total at 0, so they do not qualify as sitting.
+            'sat' => $countingResults->contains(fn ($r) => ($r['hasRealMark'] ?? false) === true),
         ]);
     }
 
