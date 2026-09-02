@@ -113,7 +113,7 @@
                     <td colspan="2">
                         <strong>Name:</strong>{{ $report['student']->first_name . ' ' . $report['student']->last_name }}
                     </td>
-                    @php $age =  $report['student']->getAge(); @endphp
+                    @php $age =  $report['student']->getAge($report['term']->end); @endphp
 
                     {{-- Don't show age if ridiculously high, as it is error in DB --}}
                     <td><strong>Age:</strong>@if ($age > 5 && $age < 20) {{ $age }} @endif</td>
