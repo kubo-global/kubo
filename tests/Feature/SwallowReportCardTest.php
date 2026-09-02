@@ -12,6 +12,7 @@ use App\Models\Enrollment;
 use App\Models\Grade;
 use App\Models\GradingScale;
 use App\Models\Offering;
+use App\Models\Profile;
 use App\Models\School;
 use App\Models\Student;
 use App\Models\Subject;
@@ -122,5 +123,28 @@ class SwallowReportCardTest extends TestCase
         $this->assertStringContainsString('No. in class:</strong> 2', $html);
         $this->assertStringContainsString('Average:</strong> 80', $html);
         $this->assertStringContainsString('A Excellent', $html);                // 80% → grade A / Excellent
+    }
+
+    #[Test]
+    public function the_card_shows_the_pupils_age_at_the_end_of_the_term_not_today(): void
+    {
+        ['school' => $school, 'offering' => $offering, 'top' => $top] = $this->scoredClass();
+
+        // Born 12 years and a day before the term ended: the card says 12, however
+        // many years later someone reprints it. (It used to say today's age.)
+        Profile::factory()->create([
+            'user_id' => $top->id,
+            'birth_date' => $this->term->end->copy()->subYears(12)->subDay()->toDateString(),
+        ]);
+        $enrollment = Enrollment::where('offering_id', $offering->id)->where('user_id', $top->id)->firstOrFail();
+
+        $reports = (new ReportGeneratorService())->generateStudentReportPdf(
+            new NewTermReportRepository($enrollment, $this->term, $school),
+        );
+        $html = view('print.termReport-swallow', ['reports' => $reports, 'positions' => collect(), 'classSize' => 1])->render();
+
+        $this->assertStringContainsString('Age:</strong> 12 ', $html);
+        $this->assertSame(12, $top->fresh()->getAge($this->term->end));
+        $this->assertGreaterThan(12, $top->fresh()->getAge(), 'The term ended in 2024, so today\'s age must differ from the card\'s');
     }
 }

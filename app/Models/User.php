@@ -164,15 +164,19 @@ class User extends Authenticatable
         return substr($this->first_name, 0, 1) . substr($this->last_name,0,1);
     }
 
-    //todo: make this a local scope instead of a regular function
-    public function getAge(){
-
+    /**
+     * Age in whole years, at $at (default: today). Report cards pass the term's
+     * end date: a card for Term 3 of 2023-24 must show how old the pupil was
+     * then, not how old they are on the day someone reprints it.
+     */
+    public function getAge(?Carbon $at = null): ?int
+    {
         $birthDate = $this->profile?->birth_date;
 
-        if($birthDate != null){
-            return Carbon::parse($birthDate)->age;
+        if ($birthDate === null) {
+            return null;
         }
 
-        return null;
+        return (int) Carbon::parse($birthDate)->diffInYears($at ?? Carbon::now());
     }
 }
